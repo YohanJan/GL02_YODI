@@ -24,10 +24,10 @@ async function mainMenu() {
 
     switch (action) {
         case "Rechercher des questions":
-            await questionManager.viewQuestion();
+            await questionManager.viewQuestionDisplay();
             break;
         case "Visualiser une question":
-            await questionManager.viewQuestion();
+            await questionManager.viewQuestionDisplay();
             break;
         case "Quitter":
             console.log(chalk.green("Au revoir !"));

@@ -8,7 +8,7 @@ const inquirer = require("inquirer");
 const questionsPath = path.join(__dirname, "../data/questions.json");
 
 
-async function viewQuestion() {
+async function viewQuestionDisplay() {
     console.log("Affichage d'une question sélectionnée...");
     try {
         // Charger les questions
@@ -20,35 +20,23 @@ async function viewQuestion() {
         }
 
         // Afficher une liste de questions pour sélection
-        const { selectedId } = await inquirer.prompt([
-            {
-                type: "list",
-                name: "selectedId",
-                message: "Sélectionnez une question à afficher :",
-                choices: questions.map((q) => ({
-                    name: `${q.id}. ${q.question} [${q.type} - ${q.difficulty}]`,
-                    value: q.id,
-                })),
-            },
-        ]);
+    const { selectedId } = await inquirer.prompt([
+        {
+            type: "list",
+            name: "selectedId",
+            message: "Sélectionnez une question à afficher :",
+            choices: questions.map((q, index) => ({
+                name: `${index + 1}. ${q.title} [${q.type}]`,
+                value: q, // Utilisation de l'index pour identifier les questions
+            })),
+        },
+    ]);
 
         // Récupérer la question sélectionnée
-        const question = questions.find((q) => q.id === selectedId);
+        const question = questions.find((q) => q === selectedId);
 
         if (question) {
-            console.log(chalk.green("\nDétails de la question sélectionnée :"));
-            console.log(chalk.blue(`Type         : ${question.type}`));
-            console.log(chalk.blue(`Difficulté   : ${question.difficulty}`));
-            console.log(chalk.blue(`Question     : ${question.question}`));
-
-            if (question.options) {
-                console.log(chalk.blue("Options :"));
-                question.options.forEach((option, index) =>
-                    console.log(`  ${index + 1}. ${option}`)
-                );
-            }
-
-            console.log(chalk.blue(`Réponse      : ${question.answer}`));
+            viewQuestion(question);
         } else {
             console.log(chalk.red("Question non trouvée."));
         }
@@ -57,6 +45,86 @@ async function viewQuestion() {
     }
 }
 
+function viewQuestion(question) {
+    console.log("\nDétails de la question sélectionnée :");
+            console.log(`Titre : ${question.title}`);
+            console.log(`Type : ${question.type}`);
+            console.log(chalk.blue(`Question :`+` ${question.question}`));
+
+            switch (question.type) {
+                case "multiple_choice":
+                    console.log("Options :");
+                    question.options.forEach((option, index) => {
+                        console.log(
+                            `  ${index + 1}. ${option.text} ${
+                                option.is_correct ? "(Correcte)" : ""
+                            }`
+                        );
+                    });
+                    break;
+        
+                case "true_false":
+                    console.log(`Réponse : ${question.answer ? "Vrai" : "Faux"}`);
+                    break;
+        
+                case "short_answer":
+                    console.log(
+                        "Réponses acceptées :",
+                        question.correct_answers.join(", ")
+                    );
+                    break;
+        
+                case "matching":
+                    console.log("Associations :");
+                    question.pairs.forEach((pair) => {
+                        console.log(`  ${pair.term} -> ${pair.match}`);
+                    });
+                    break;
+        
+                case "cloze":
+                    console.log("Texte avec lacunes :");
+                    // const filledQuestion = question.answers.reduce(
+                    //     (text, answer, index) => text.replace(`{${index + 1}}`, answer),
+                    //     question.question
+                    // );
+                    // console.log(filledQuestion);
+                    console.log("Réponses attendues :");
+                    question.answers.forEach((answer, index) => {
+                        console.log(`  Lacune ${index + 1} : ${answer}`);
+                    });
+                    break;
+        
+                case "numerical":
+                    console.log(
+                        `Réponse : ${question.correct_answer} ± ${question.tolerance}`
+                    );
+                    break;
+        
+                case "multiple_choice_feedback":
+                    console.log("Options avec feedback :");
+                    question.options.forEach((option, index) => {
+                        console.log(
+                            `  ${index + 1}. ${option.text} ${
+                                option.is_correct ? "(Correcte)" : ""
+                            } - Feedback: ${option.feedback || "Aucun"}`
+                        );
+                    });
+                    break;
+        
+                default:
+                    console.log("Type de question inconnu.");
+            }
+
+            // if (question.options) {
+            //     console.log(chalk.blue("Options :"));
+            //     question.options.forEach((option, index) =>
+            //         console.log(`  ${index + 1}. ${option}`)
+            //     );
+            // }
+
+            // console.log(chalk.blue(`Réponse      : ${question.answer}`));
+}
+
 module.exports = {
-    viewQuestion,
+    viewQuestionDisplay,viewQuestion
 };
