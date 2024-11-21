@@ -1,4 +1,6 @@
 // const examSimulator = require("./src/examSimulator");
+import chalk from 'chalk';
+import inquirer from 'inquirer';
 
 async function mainMenu() {
     console.log(chalk.blue("Bienvenue dans l'outil SRYEM GIFT Utility"));
