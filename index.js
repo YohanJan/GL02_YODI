@@ -1,6 +1,7 @@
 // const examSimulator = require("./src/examSimulator");
-import chalk from 'chalk';
-import inquirer from 'inquirer';
+const chalk = require('chalk');
+const inquirer = require('inquirer');
+const questionManager = require('./src/questionMAnager.js');
 
 async function mainMenu() {
     console.log(chalk.blue("Bienvenue dans l'outil SRYEM GIFT Utility"));
@@ -23,7 +24,10 @@ async function mainMenu() {
 
     switch (action) {
         case "Rechercher des questions":
-            await questionManager.searchQuestions();
+            await questionManager.viewQuestion();
+            break;
+        case "Visualiser une question":
+            await questionManager.viewQuestion();
             break;
         case "Quitter":
             console.log(chalk.green("Au revoir !"));
