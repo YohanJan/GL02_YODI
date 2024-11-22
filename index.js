@@ -25,7 +25,7 @@ async function mainMenu() {
 
     switch (action) {
         case "Rechercher des questions":
-            await questionManager.viewQuestionDetails();
+            // await questionManager.viewQuestionDetails();
             break;
         case "Visualiser une question":
             await questionManager.viewQuestionDetails();
