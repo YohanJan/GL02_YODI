@@ -38,6 +38,12 @@
         "answers": ["Rome", "Europe"]
     },
     {
+        "type": "cloze",
+        "title": "Trouver la capitale du Japon",
+        "question": "La capitale de l'Italie est {} et c'est situe en {}.",
+        "answers": ["Tokyo", "Seoul"]
+    },
+    {
         "type": "numerical",
         "title": "Valeur de π",
         "question": "Quelle est la valeur approximative de π ?",

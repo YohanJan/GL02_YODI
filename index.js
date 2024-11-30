@@ -18,6 +18,7 @@ async function mainMenu() {
                 "Créer un examen GIFT",
                 "Générer une VCard",
                 "Simuler un examen",
+                "Definir un profil d' examen",
                 "Quitter",
             ],
         },
@@ -25,13 +26,17 @@ async function mainMenu() {
 
     switch (action) {
         case "Rechercher des questions":
-            // await questionManager.viewQuestionDetails();
+            // await examManager.test();
             break;
         case "Visualiser une question":
             await questionManager.viewQuestionDetails();
             break;
         case "Créer un examen GIFT":
             await examManager.makeExamGift();
+            break;
+                
+        case "Definir un profil d' examen":
+            await examManager.MenuAnalyze();
             break;
         case "Quitter":
             console.log(chalk.green("Au revoir !"));
