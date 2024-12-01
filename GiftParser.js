@@ -11,57 +11,64 @@ var GiftParser = function (sTokenize) {
     this.readingQuestionStorage = {}; // Stocke les textes Reading associés aux préfixes complets
 
     /**
-     * Analyse une entrée avec type, titre et question.
-     * @param {string} title - Le titre du POI.
-     * @param {string} question - La question associée.
-     * @returns {Object|null} Objet contenant le type, titre, question et détails supplémentaires.
-     */
-    this.parseLine = function (title, question) {
-        if (!title || !question) return null;
+ * Analyse une entrée avec type, titre et question.
+ * @param {string} title - Le titre du POI.
+ * @param {string} question - La question associée.
+ * @returns {Object|null} Objet contenant le type, titre, question et détails supplémentaires.
+ */
+this.parseLine = function (title, question) {
+    if (!title || !question) return null;
 
-        const type = this.identifyType(question);
-        const cleanedQuestion = this.formatText(question.trim()); // Appliquer le formatage ici
-        if (!cleanedQuestion) {
-            console.warn("La question est vide après nettoyage:", title);
-            return null;
-        }
+    const type = this.identifyType(question);
+    const cleanedQuestion = this.formatText(question.trim()); // Appliquer le formatage ici
 
-        let additionalData = {};
+    if (!cleanedQuestion) {
+        console.warn("La question est vide après nettoyage:", title);
+        return null;
+    }
 
-        // Processus spécifique pour extraire les réponses selon le type
-        switch (type) {
-            case "multiple_choice":
-                additionalData = { options: this.extractOptions(cleanedQuestion) };
-                break;
-            case "true_false":
-                additionalData = { answer: this.extractTrueFalse(cleanedQuestion) };
-                break;
-            case "open":
-                // Pas de quatrième partie pour "open"
-                break;
-            case "numerical":
-                additionalData = this.extractNumerical(cleanedQuestion);
-                break;
-            case "matching":
-                additionalData = { pairs: this.extractMatching(cleanedQuestion) };
-                break;
-            case "cloze":
-                additionalData = { answers: this.extractCloze(cleanedQuestion) };
-                break;
-            case "multiple_choice_feedback":
-                additionalData = { options: this.extractMultipleChoiceFeedback(cleanedQuestion) };
-                break;
-            default:
-                console.warn("Type de question non reconnu:", title);
-        }
+    // Remplacer les zones entre accolades par des identifiants uniques (x)
+    const realQuestion = this.generateRealQuestion(cleanedQuestion);
 
-        return {
-            type: type,
-            title: title.trim(),
-            question: cleanedQuestion,
-            ...additionalData
-        };
+    let additionalData = {};
+
+    // Processus spécifique pour extraire les réponses selon le type
+    switch (type) {
+        case "multiple_choice":
+            additionalData = { options: this.extractOptions(cleanedQuestion) };
+            break;
+        case "true_false":
+            additionalData = { answer: this.extractTrueFalse(cleanedQuestion) };
+            break;
+        case "open":
+            // Pas de quatrième partie pour "open"
+            break;
+        case "numerical":
+            additionalData = this.extractNumerical(cleanedQuestion);
+            break;
+        case "matching":
+            additionalData = { pairs: this.extractMatching(cleanedQuestion) };
+            break;
+        case "cloze":
+            additionalData = { answers: this.extractCloze(cleanedQuestion) };
+            break;
+        case "short_answer":
+            additionalData = { correct_answers: this.extractShortAnswer(cleanedQuestion) };
+            break;    
+        case "multiple_choice_feedback":
+            additionalData = { options: this.extractMultipleChoiceFeedback(cleanedQuestion) };
+            break;
+        default:
+            console.warn("Type de question non reconnu:", title);
+    }
+
+    return {
+        type: type,
+        title: title.trim(),
+        question: realQuestion, // Utiliser realQuestion à la place de cleanedQuestion
+        ...additionalData
     };
+};
 
     /**
      * Identifie le type de question à partir de la section question.
@@ -96,23 +103,36 @@ var GiftParser = function (sTokenize) {
         return "type non reconnu";
     };
 
-    /**
-     * Extrait les options pour une question de type "multiple_choice" ou "multiple_choice_feedback".
-     * @param {string} question - La question à traiter.
-     * @returns {Array} Liste des options formatées.
-     */
-    this.extractOptions = function (question) {
-        let options = [];
-        const matches = question.match(/([~=])([^~={}]+)(?=[~={}]*[}])/g);
-        if (matches) {
-            matches.forEach((match) => {
-                const isCorrect = match.startsWith("=");
-                const text = match.substring(1).trim();
-                options.push({ text: text, is_correct: isCorrect});
-            });
-        }
-        return options;
-    };
+   /**
+ * Extrait les options pour une question de type "multiple_choice" ou "multiple_choice_feedback".
+ * @param {string} question - La question à traiter.
+ * @returns {Array} Liste des options formatées.
+ */
+this.extractOptions = function (question) {
+    let options = [];
+    
+    // Trouver tous les blocs { ... } contenant les choix multiples
+    const blocks = question.match(/{([^}]+)}/g);
+    if (blocks) {
+        blocks.forEach((block) => {
+            // Supprimer les accolades et analyser le contenu interne
+            const innerContent = block.replace(/[{}]/g, "");
+            
+            // Trouver chaque option dans le bloc
+            const matches = innerContent.match(/([~=])([^~={}]+)/g);
+            if (matches) {
+                matches.forEach((match) => {
+                    const isCorrect = match.startsWith("=");
+                    const text = match.substring(1).trim();
+                    options.push({ text: text, is_correct: isCorrect });
+                });
+            }
+        });
+    }
+    
+    return options;
+};
+
 
     /**
      * Extrait la réponse pour une question de type "true_false".
@@ -128,41 +148,57 @@ var GiftParser = function (sTokenize) {
         return null;
     };
 
-    /**
-     * Extrait les réponses pour une question de type "numerical".
-     * @param {string} question - La question à traiter.
-     * @returns {Object} Les réponses numériques et la tolérance.
-     */
-    this.extractNumerical = function (question) {
-        const match = question.match(/{=(\d+\.\d+):(\d+\.\d+)}/);
-        if (match) {
-            return {
-                correct_answer: parseFloat(match[1]),
-                tolerance: parseFloat(match[2])
-            };
-        }
-        return null;
-    };
+ /**
+ * Extrait les réponses pour une question de type "numerical".
+ * @param {string} question - La question à traiter.
+ * @returns {Object|null} Les réponses numériques et la tolérance, ou null si le format est incorrect.
+ */
+this.extractNumerical = function (question) {
+    // Expression régulière pour capturer uniquement la première valeur de la réponse numérique et la tolérance
+    const match = question.match(/{#=([\d.]+)(?::([\d.]+))?/);
+
+    if (match) {
+        const correctAnswer = parseFloat(match[1]); // La première valeur correcte
+        const tolerance = match[2] ? parseFloat(match[2]) : 0; // Tolérance par défaut 0 si non spécifiée
+
+        // Nettoyer la question en supprimant le bloc `{#=...}`
+        const cleanedQuestion = question.replace(/{#=[^}]+}/, "").trim();
+
+        return {
+            correct_answer: correctAnswer,
+            tolerance: tolerance
+        };
+    }
+
+    return null; // Retourne null si aucun match n'est trouvé
+};
+
+
 
     /**
-     * Extrait les paires pour une question de type "matching".
-     * @param {string} question - La question à traiter.
-     * @returns {Array} Liste des paires formatées.
-     */
-    this.extractMatching = function (question) {
-        let pairs = [];
-        const matches = question.match(/=([^{]+)->([^{]+)(?=[=}])/g);
+ * Extrait les paires pour une question de type "matching".
+ * @param {string} question - La question à traiter.
+ * @returns {Array} Liste des paires formatées.
+ */
+this.extractMatching = function (question) {
+    let pairs = [];
+    const blockMatch = question.match(/{([^}]+)}/); // Trouver le bloc contenant les paires
+    if (blockMatch) {
+        const blockContent = blockMatch[1]; // Extraire le contenu du bloc
+        const matches = blockContent.match(/=([^=->]+)->([^=->]+)/g); // Trouver toutes les paires
         if (matches) {
             matches.forEach((match) => {
                 const [term, matchText] = match.split("->");
                 pairs.push({
-                    term: term.trim(),
-                    match: matchText.trim()
+                    term: term.replace("=", "").trim(), // Nettoyer le terme
+                    match: matchText.trim() // Nettoyer la correspondance
                 });
             });
         }
-        return pairs;
-    };
+    }
+    return pairs;
+};
+
 
     /**
      * Extrait les réponses pour une question de type "cloze".
@@ -182,6 +218,30 @@ var GiftParser = function (sTokenize) {
         }
         return answers;
     };
+
+/**
+ * Extrait les réponses correctes pour une question de type "short_answer".
+ * @param {string} question - La question à traiter.
+ * @returns {Array} Liste des réponses correctes formatées.
+ */
+this.extractShortAnswer = function (question) {
+    let correct_answers = [];
+    // Trouver le bloc { ... } dans la question
+    const match = question.match(/{([^}]+)}/);
+    if (match) {
+        // Extraire le contenu du bloc et chercher toutes les réponses correctes précédées de "="
+        const content = match[1]; // Contenu à l'intérieur des accolades
+        const answers = content.match(/=(.*?)(?=[=#}])/g); // Cherche toutes les réponses correctes
+        if (answers) {
+            answers.forEach((answer) => {
+                const cleanAnswer = answer.replace("=", "").trim(); // Nettoyer le "=" initial
+                correct_answers.push(cleanAnswer);
+            });
+        }
+    }
+    return correct_answers;
+};
+
 
 /**
  * Extrait les options et le feedback pour une question de type "multiple_choice_feedback".
@@ -377,19 +437,31 @@ if (!titleInfo || !titleInfo.suffix.endsWith("0")) {
      */
     this.formatText = function (text) {
         if (!text) return "";
-
-        // Remplacement des balises reconnues
-        text = text.replace(/<b>(.*?)<\/b>/g, "**$1**"); // Gras
-        text = text.replace(/<i>(.*?)<\/i>/g, "_$1_"); // Italique
-        text = text.replace(/<u>(.*?)<\/u>/g, "__$1__"); // Souligné
-        text = text.replace(/<h(\d)>(.*?)<\/h\1>/g, "\n# $2\n"); // Titre (H1, H2, ...)
-        text = text.replace(/<br\s*\/?>|\n/g, "\n"); // Retour à la ligne
-
-        // Suppression des balises non reconnues
-        text = text.replace(/<[^>]+>/g, "").replace(/\[[^\]]+\]/g, "");
-
+    
+        // Supprimer toutes les balises HTML
+        text = text.replace(/<[^>]+>/g, "");
+    
+        // Supprimer les séquences entre crochets (comme [html])
+        text = text.replace(/\[[^\]]+\]/g, "");
+    
+        // Supprimer tous les caractères de retour à la ligne
+        text = text.replace(/"\n"/g, "");
+    
         return text.trim();
     };
+  /**
+ * Remplace toutes les zones entre accolades (y compris les accolades) par des identifiants uniques (x),
+ * où x est le numéro du bloc.
+ * @param {string} text - Le texte à traiter.
+ * @returns {string} Le texte modifié avec les zones entre accolades remplacées par des identifiants uniques.
+ */
+this.generateRealQuestion = function (text) {
+    let blockCount = 1; // Compteur pour les blocs
+    return text.replace(/{[^}]*}/g, () => {
+        return `(${blockCount++})`; // Remplace le bloc par (x) et incrémente le compteur
+    });
+};
+  
 };
 
 module.exports = GiftParser;
