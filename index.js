@@ -26,7 +26,7 @@ async function mainMenu() {
 
     switch (action) {
         case "Rechercher des questions":
-            // await examManager.test();
+            await questionManager.researchQuestions();
             break;
         case "Visualiser une question":
             await questionManager.viewQuestionDetails();
@@ -34,7 +34,18 @@ async function mainMenu() {
         case "Créer un examen GIFT":
             await examManager.makeExamGift();
             break;
-                
+        case "Générer une VCard":
+            let contact = {
+                name : "Gigi",
+                surname : "Hadid",
+                email : "blabla@utt.fr",
+                phone : 678908754
+            };
+            function generateVCard(contact) {
+            const vCard = `BEGIN: VCARD\nVERSION: 4.0\nN: ${contact.name}\nSN: ${contact.surname}\nEMAIL: ${contact.email}\nTEL: ${contact.phone}\nEND: VCARD`
+                return vCard;
+            }
+            break;
         case "Definir un profil d' examen":
             await examManager.MenuAnalyze();
             break;

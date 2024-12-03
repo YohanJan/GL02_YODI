@@ -5,6 +5,41 @@ const chalk = require("chalk");
 
 const questionsPath = path.join(__dirname, "../data/questions.json");
 
+async function researchQuestions(questions, keyword, categorie) {
+    console.log("Recherche de questions...");
+    try {
+        // Chargement et affichage des questions de la banque
+        // questions = await fs.readJSON(questionsPath);
+        // console.log("Questions en notre possession : ", questions);
+            while (true) {
+                const { keyword } = await inquirer.prompt([
+                    {
+                        type: "string",
+                        name: "keyword",
+                        message: `entrer un mot clé de recherche`,
+                    }
+                ]);
+            }
+        
+        const keywordLower = keyword.toString().toLowerCase();
+        return questions.filter(question => {
+            const contientKeyword = question.text.toLowerCase().includes(keywordLower);
+            const memeCategorie = categorie ? question.categorie === categorie : true;
+            return contientKeyword && memeCategorie;});
+    /*    return questions
+    .map(question => ({
+        ...question,
+        contientKeyword: question.text.toLowerCase().includes(keywordLower),
+        memeCategorie: categorie ? question.categorie === categorie : true,
+    }))
+    .filter(question => question.contientKeyword && question.memeCategorie);*/
+        
+        } catch (error) {
+            console.error(chalk.red("Erreur lors de la recherche :"), error);
+            return null;
+        }
+}
+
 async function selectQuestion() {
     console.log("Affichage d'une question sélectionnée...");
     try {
@@ -15,7 +50,7 @@ async function selectQuestion() {
             console.log(chalk.red("La banque de questions est vide."));
             return null;
         }
-
+        
         // Afficher une liste des questions pour sélection
         const { selectedQuestion } = await inquirer.prompt([
             {
@@ -119,5 +154,5 @@ async function viewQuestionDetails() {
     }
 }
 module.exports = {
-    viewQuestionDetails,viewQuestion,selectQuestion
+    researchQuestions,viewQuestionDetails,viewQuestion,selectQuestion
 };
