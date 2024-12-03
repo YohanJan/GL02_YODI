@@ -5,41 +5,42 @@ const chalk = require("chalk");
 
 const questionsPath = path.join(__dirname, "../data/questions.json");
 
-async function researchQuestions(questions, keyword, categorie) {
+async function researchQuestions() {
     console.log("Recherche de questions...");
     try {
-        // Chargement et affichage des questions de la banque
-        // questions = await fs.readJSON(questionsPath);
-        // console.log("Questions en notre possession : ", questions);
-            while (true) {
-                const { keyword } = await inquirer.prompt([
-                    {
-                        type: "string",
-                        name: "keyword",
-                        message: `entrer un mot clé de recherche`,
-                    }
-                ]);
-            }
-        
-        const keywordLower = keyword.toString().toLowerCase();
-        return questions.filter(question => {
-            const contientKeyword = question.text.toLowerCase().includes(keywordLower);
-            const memeCategorie = categorie ? question.categorie === categorie : true;
-            return contientKeyword && memeCategorie;});
-    /*    return questions
-    .map(question => ({
-        ...question,
-        contientKeyword: question.text.toLowerCase().includes(keywordLower),
-        memeCategorie: categorie ? question.categorie === categorie : true,
-    }))
-    .filter(question => question.contientKeyword && question.memeCategorie);*/
+
+        //parser to json
+        const questions = await fs.readJSON(questionsPath);
+
+        const { keyword } = await inquirer.prompt([
+            {
+                type: "string",
+                name: "keyword",
+                message: `Entrer un mot clé de recherche`,
+            },
+        ]);
+    
+        const keywordLower = keyword ? keyword.toString().toLowerCase() : "";
+
+
+        const filteredQuestions = questions.filter(question => question.question.toString().toLowerCase().includes(keywordLower)
+        );
+
+        console.log( filteredQuestions.length > 0 ? displayListQuestions(filteredQuestions) : "Question not found" )
+
         
         } catch (error) {
             console.error(chalk.red("Erreur lors de la recherche :"), error);
             return null;
         }
 }
-
+function displayListQuestions(questions) {
+    console.log("Liste des questions trouvées :");
+    questions.forEach((question, index) => {
+        console.log(`${index + 1}. ${question.title} [${question.type}]`);
+        console.log(`--> ${question.question.substring(0, 90)} `);
+    });
+}
 async function selectQuestion() {
     console.log("Affichage d'une question sélectionnée...");
     try {

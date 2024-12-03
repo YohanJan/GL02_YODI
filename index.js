@@ -46,7 +46,7 @@ async function mainMenu() {
                 return vCard;
             }
             break;
-        case "Definir un profil d' examen":
+            case "Definir un profil d' examen":
             await examManager.MenuAnalyze();
             break;
         case "Quitter":
