@@ -10,8 +10,7 @@ var GiftParser = function (sTokenize) {
     this.questionMappings = {};
     this.readingQuestionStorage = {}; // Stocke les textes Reading associés aux préfixes complets
 
-    /**
- * Analyse une entrée avec type, titre et question.
+    /** Analyse une entrée avec type, titre et question.
  * @param {string} title - Le titre du POI.
  * @param {string} question - La question associée.
  * @returns {Object|null} Objet contenant le type, titre, question et détails supplémentaires.
@@ -19,7 +18,7 @@ var GiftParser = function (sTokenize) {
 this.parseLine = function (title, question) {
     if (!title || !question) return null;
 
-    const type = this.identifyType(question);
+    const type = this.identifyType(question,title);
     const cleanedQuestion = this.formatText(question.trim()); // Appliquer le formatage ici
 
     if (!cleanedQuestion) {
@@ -58,8 +57,11 @@ this.parseLine = function (title, question) {
         case "multiple_choice_feedback":
             additionalData = { options: this.extractMultipleChoiceFeedback(cleanedQuestion) };
             break;
+        case "Ennonce_pure":
+        //    console.warn("Ennoncé pure reconnu:", title); //N'activer la ligne que pour tester si elles sont reconnues.
+            break;
         default:
-            console.warn("Type de question non reconnu:", title);
+            console.warn("Type de question non pris en charge:", title);
     }
 
     return {
@@ -70,21 +72,20 @@ this.parseLine = function (title, question) {
     };
 };
 
-    /**
-     * Identifie le type de question à partir de la section question.
+/** Identifie le type de question à partir de la section question.
      * @param {string} question - Le contenu de la question.
      * @returns {string} Le type de la question ou "type non reconnu".
      */
-    this.identifyType = function (question) {
+    this.identifyType = function (question,title) {
         question = question.trim();
-
+        const titleInfo = this.detectIndexedTitle(title);
         if (question.includes("~") && question.includes("=") && question.includes("#")) {
             return "multiple_choice_feedback";
         } else if (question.includes("~") && question.includes("=") && !question.includes("SA")) {
             return "multiple_choice";
         } else if (question.includes("{}")) {
             return "open";
-        } else if (question.includes("VRAI") || question.includes("FAUX")) {
+        } else if (question.includes("{TRUE}") || question.includes("{T}") || question.includes("{FALSE}") || question.includes("{F}")) {
             return "true_false";
         } else if (question.includes("{#")) {
             return "numerical";
@@ -98,13 +99,15 @@ this.parseLine = function (title, question) {
             } else {
                 return "short_answer"; // Un seul bloc de réponse dans la question
             }
+        }else if (titleInfo && titleInfo.suffix.endsWith("0")) {
+        // Si c'est un x.0, il est normal que le type dee soit pas reconnu
+            return "Ennonce_pure";
         }
 
         return "type non reconnu";
     };
 
-   /**
- * Extrait les options pour une question de type "multiple_choice" ou "multiple_choice_feedback".
+/** Extrait les options pour une question de type "multiple_choice" ou "multiple_choice_feedback".
  * @param {string} question - La question à traiter.
  * @returns {Array} Liste des options formatées.
  */
@@ -134,35 +137,30 @@ this.extractOptions = function (question) {
 };
 
 
-    /**
-     * Extrait la réponse pour une question de type "true_false".
+    /** Extrait la réponse pour une question de type "true_false".
      * @param {string} question - La question à traiter.
      * @returns {boolean} La réponse vraie ou fausse.
      */
     this.extractTrueFalse = function (question) {
-        if (question.includes("{VRAI}")) {
+        if (question.includes("{TRUE}") || question.includes("{T}")) {
             return true;
-        } else if (question.includes("{FAUX}")) {
+        } else if (question.includes("{FALSE}") || question.includes("{F}")) {
             return false;
         }
         return null;
     };
 
- /**
- * Extrait les réponses pour une question de type "numerical".
+ /** Extrait les réponses pour une question de type "numerical".
  * @param {string} question - La question à traiter.
  * @returns {Object|null} Les réponses numériques et la tolérance, ou null si le format est incorrect.
  */
-this.extractNumerical = function (question) {
-    // Expression régulière pour capturer uniquement la première valeur de la réponse numérique et la tolérance
-    const match = question.match(/{#=([\d.]+)(?::([\d.]+))?/);
+ this.extractNumerical = function (question) {
+    // Expression régulière pour capturer la réponse numérique et la tolérance (avec ou sans "=")
+    const match = question.match(/{#\s*=?\s*([\d.]+)\s*:\s*([\d.]+)/);
 
     if (match) {
-        const correctAnswer = parseFloat(match[1]); // La première valeur correcte
-        const tolerance = match[2] ? parseFloat(match[2]) : 0; // Tolérance par défaut 0 si non spécifiée
-
-        // Nettoyer la question en supprimant le bloc `{#=...}`
-        const cleanedQuestion = question.replace(/{#=[^}]+}/, "").trim();
+        const correctAnswer = parseFloat(match[1]); // Capture la valeur correcte
+        const tolerance = parseFloat(match[2]);    // Capture la tolérance
 
         return {
             correct_answer: correctAnswer,
@@ -170,13 +168,11 @@ this.extractNumerical = function (question) {
         };
     }
 
-    return null; // Retourne null si aucun match n'est trouvé
+    return null; // Retourne null si aucun bloc {# ... } n'est trouvé
 };
 
 
-
-    /**
- * Extrait les paires pour une question de type "matching".
+/** Extrait les paires pour une question de type "matching".
  * @param {string} question - La question à traiter.
  * @returns {Array} Liste des paires formatées.
  */
@@ -200,8 +196,7 @@ this.extractMatching = function (question) {
 };
 
 
-    /**
-     * Extrait les réponses pour une question de type "cloze".
+/** Extrait les réponses pour une question de type "cloze".
      * @param {string} question - La question à traiter.
      * @returns {Array} Liste des réponses extraites.
      */
@@ -219,8 +214,7 @@ this.extractMatching = function (question) {
         return answers;
     };
 
-/**
- * Extrait les réponses correctes pour une question de type "short_answer".
+/** Extrait les réponses correctes pour une question de type "short_answer".
  * @param {string} question - La question à traiter.
  * @returns {Array} Liste des réponses correctes formatées.
  */
@@ -231,7 +225,7 @@ this.extractShortAnswer = function (question) {
     if (match) {
         // Extraire le contenu du bloc et chercher toutes les réponses correctes précédées de "="
         const content = match[1]; // Contenu à l'intérieur des accolades
-        const answers = content.match(/=(.*?)(?=[=#}]|$)/g); // Cherche toutes les réponses correctes
+        const answers = content.match(/([=])([^=#{}]+)/g); // Cherche toutes les réponses correctes
         if (answers) {
             answers.forEach((answer) => {
                 const cleanAnswer = answer.replace("=", "").trim(); // Nettoyer le "=" initial
@@ -243,8 +237,7 @@ this.extractShortAnswer = function (question) {
 };
 
 
-/**
- * Extrait les options et le feedback pour une question de type "multiple_choice_feedback".
+/** Extrait les options et le feedback pour une question de type "multiple_choice_feedback".
  * @param {string} question - La question à traiter.
  * @returns {Array} Liste des options avec feedback.
  */
@@ -270,8 +263,7 @@ this.extractMultipleChoiceFeedback = function (question) {
 };
 
 
-    /**
-     * Ajoute une entrée dans parsedPOI sans doublons.
+/** Ajoute une entrée dans parsedPOI sans doublons.
      * @param {Object} parsed - Objet représentant la question traitée.
      */
     this.addToParsedPOI = function (parsed) {
@@ -287,8 +279,7 @@ this.extractMultipleChoiceFeedback = function (question) {
     };
 
     
-    /**
-     * Nettoie le texte d'entrée et extrait les POIs.
+    /** Nettoie le texte d'entrée et extrait les POIs.
      * @param {string} input - Le contenu du fichier GIFT.
      * @returns {Array} Liste des POIs extraits.
      */
@@ -407,8 +398,7 @@ if (!titleInfo || !titleInfo.suffix.endsWith("0")) {
         return this.parsedPOI;
     };
 
-    /**
-     * Détecte si un titre correspond au format x.0, x.1 ou x.A1.
+    /** Détecte si un titre correspond au format x.0, x.1 ou x.A1.
      * @param {string} title - Le titre à analyser.
      * @returns {Object|null} Informations sur le titre (index x et suffixe) ou null.
      */
@@ -420,8 +410,7 @@ if (!titleInfo || !titleInfo.suffix.endsWith("0")) {
         return null;
     };
 
-    /**
-     * Extrait le préfixe "Reading" du titre, s'il existe.
+    /** Extrait le préfixe "Reading" du titre, s'il existe.
      * @param {string} title - Le titre à analyser.
      * @returns {string|null} Le préfixe Reading ou null.
      */
@@ -430,8 +419,7 @@ if (!titleInfo || !titleInfo.suffix.endsWith("0")) {
         return match ? match[1].trim() + " Reading" : null;
     };
 
-    /**
-     * Nettoie et applique le formatage au texte contenant des balises HTML.
+    /** Nettoie et applique le formatage au texte contenant des balises HTML.
      * @param {string} text - Le texte à traiter.
      * @returns {string} Texte formaté.
      */
@@ -449,8 +437,7 @@ if (!titleInfo || !titleInfo.suffix.endsWith("0")) {
     
         return text.trim();
     };
-  /**
- * Remplace toutes les zones entre accolades (y compris les accolades) par des identifiants uniques (x),
+  /** Remplace toutes les zones entre accolades (y compris les accolades) par des identifiants uniques (x),
  * où x est le numéro du bloc.
  * @param {string} text - Le texte à traiter.
  * @returns {string} Le texte modifié avec les zones entre accolades remplacées par des identifiants uniques.
