@@ -124,29 +124,41 @@ async function generateGiftFile(examSet) {
                     const multipleChoiceOptions = question.options
                         .map((option) => (option.is_correct ? `=${option.text}` : `~${option.text}`))
                         .join(" ");
-                    return `::Question ${index + 1}:: ${question.question} { ${multipleChoiceOptions} }`;
+                    return `::${question.title}:: ${question.question} { ${multipleChoiceOptions} }`;
 
                 case "true_false":
-                    return `::Question ${index + 1}:: ${question.question} { ${question.answer ? "T" : "F"} }`;
+                    return `::${question.title}:: ${question.question} { ${question.answer ? "T" : "F"} }`;
 
                 case "short_answer":
                     const shortAnswers = question.correct_answers.map((ans) => `=${ans}`).join(" ");
-                    return `::Question ${index + 1}:: ${question.question} { ${shortAnswers} }`;
+                    return `::${question.title}:: ${question.question} { ${shortAnswers} }`;
 
                 case "matching":
                     const matchingPairs = question.pairs
                         .map((pair) => `=${pair.term} -> ${pair.match}`)
                         .join(" ");
-                    return `::Question ${index + 1}:: ${question.question} { ${matchingPairs} }`;
+                    return `::${question.title}:: ${question.question} { ${matchingPairs} }`;
 
                 case "cloze":
-                    return `::Question ${index + 1}:: ${question.question}`;
+                    const clozeQuestion = question.answers.reduce((formatted, answer, index) => {
+                        return formatted.replace(`(${index + 1})`, `{=${answer}}`);
+                    }, question.question);
+                    
+                        return `::${question.title}:: ${clozeQuestion}`;
 
                 case "numerical":
-                    return `::Question ${index + 1}:: ${question.question} {#${question.correct_answer}:${question.tolerance}}`;
+                    return `::${question.title}:: ${question.question} {#${question.correct_answer}:${question.tolerance}}`;
 
+                case "multiple_choice_feedback":
+                    const feedbackOptions = question.options.map((option) => {
+                        const prefix = option.is_correct ? "=" : "~";
+                        return `${prefix}${option.text}#${option.feedback}`;
+                    }).join(" ");
+                    return `::${question.title}:: ${question.question} { ${feedbackOptions} }`;
+                case "open":
+                    return `::${question.title}:: ${question.question} {}`;
                 default:
-                    console.log(chalk.yellow(`Type de question inconnu : ${question.type}`));
+                    console.log(chalk.yellow(`Type de question non pris en charge : ${question.type}`));
                     return null;
             }
         })
@@ -167,7 +179,8 @@ async function analyze(toAnalyze) {
     try {
         // Charger les questions depuis le fichier JSON
         console.log(chalk.red("Analyse des questions pour définir un profil d'examen..."));
-        const questions = await fs.readJSON(toAnalyze);
+        const questions = toAnalyze
+        // const questions = await fs.readJSON(toAnalyze);dataToParse
         console.log(chalk.green("Questions chargées avec succès."));
 
         if (questions.length === 0) {
@@ -201,19 +214,20 @@ async function MenuAnalyze() {
 
 
         // Parse the selected file
-        parsedData = await parser.parse(filePath, "./data/questions.json");
-        if (!parsedData) {
-            console.error("Parsing failed. Exiting.");
+        // parsedData = await parser.parse(filePath, "./data/questions.json");
+        dataToParse = await fs.readJSON("./data/questions.json");
+        if (!dataToParse) {
+            console.log("No data to analyze. Exiting.");
             return;
         }
-        console.log(JSON.stringify(parsedData, null, 2));
-        return null
+        console.log(JSON.stringify(dataToParse, null, 2));
+        // return null
 
         // Initialize the profile
         initProfile();
 
         // Analyze the questions to define an exam profile
-        await analyze(parsedData);
+        await analyze(dataToParse);
 
         // Generate a chart specification
         const spec = {
@@ -343,6 +357,8 @@ function initProfile(){
         numerical: { count: 0, questions: [] },
         short_answer: { count: 0, questions: [] },
         true_false: { count: 0, questions: [] },
+        multiple_choice_feedback: { count: 0, questions: [] },
+        open: { count: 0, questions: [] },
     };
 }
 module.exports = {
