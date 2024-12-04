@@ -201,6 +201,8 @@ async function analyze(toAnalyze) {
 async function MenuAnalyze() {
     const directoryPath = path.resolve("./data"); // Use absolute path
     let parsedData = null;
+    // Initialize the profile
+    initProfile();
 
     try {
         // Select a file
@@ -214,20 +216,17 @@ async function MenuAnalyze() {
 
 
         // Parse the selected file
-        // parsedData = await parser.parse(filePath, "./data/questions.json");
-        dataToParse = await fs.readJSON("./data/questions.json");
-        if (!dataToParse) {
+        parsedData = await parser.parse(filePath, "./data/questions.json");
+        
+        console.log(parsedData)
+        // dataToParse = await fs.readJSON("./data/questions.json");
+        if (!parsedData) {
             console.log("No data to analyze. Exiting.");
             return;
         }
-        console.log(JSON.stringify(dataToParse, null, 2));
-        // return null
-
-        // Initialize the profile
-        initProfile();
 
         // Analyze the questions to define an exam profile
-        await analyze(dataToParse);
+        await analyze(parsedData);
 
         // Generate a chart specification
         const spec = {
@@ -337,7 +336,7 @@ function prepareProfile(profile) {
 }
 function isQuestionInSet(set, question) {
     return Array.from(set).some(
-        (q) => JSON.stringify(q) === JSON.stringify(question)
+        (q) => JSON.stringify(q.title) === JSON.stringify(question.title)
     );
 }
 function recognizeType(question) {
