@@ -231,7 +231,7 @@ this.extractShortAnswer = function (question) {
     if (match) {
         // Extraire le contenu du bloc et chercher toutes les réponses correctes précédées de "="
         const content = match[1]; // Contenu à l'intérieur des accolades
-        const answers = content.match(/=(.*?)(?=[=#}])/g); // Cherche toutes les réponses correctes
+        const answers = content.match(/=(.*?)(?=[=#}]|$)/g); // Cherche toutes les réponses correctes
         if (answers) {
             answers.forEach((answer) => {
                 const cleanAnswer = answer.replace("=", "").trim(); // Nettoyer le "=" initial

@@ -2,13 +2,13 @@ const fs = require("fs");
 const path = require("path");
 
 // Charge le GiftParser
-const GiftParser = require("./GiftParser"); // Assure-toi que le chemin est correct
+const GiftParser = require("./GiftParser"); 
 
 // Dossier contenant les fichiers GIFT
-const inputFolder = path.join("C:", "Users", "yohan", "OneDrive", "Documents", "UTT Cours", "ISI1", "GL02", "GL02_YODI", "GL02_YODI", "data", "Questions_GIFT");
+const inputFolder = path.join(process.cwd(), 'data', 'Questions_GIFT');
 
 // Fichier JSON de sortie
-const outputFile = path.join("C:", "Users", "yohan", "OneDrive", "Documents", "UTT Cours", "ISI1", "GL02", "GL02_YODI", "GL02_YODI", "data", "testQuestions.json");
+const outputFile = path.join(process.cwd(), 'data', 'testQuestions.json');
 
 // Initialisation du GiftParser
 const parser = new GiftParser(true); // Paramètre pour afficher le tokenizing
