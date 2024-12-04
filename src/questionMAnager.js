@@ -2,14 +2,20 @@ const path = require("path");
 const fs = require("fs-extra");
 const inquirer = require("inquirer");
 const chalk = require("chalk");
+const parser = require("./processGiftFiles");
 
 const questionsPath = path.join(__dirname, "../data/questions.json");
 
 async function selectQuestion() {
     console.log("Affichage d'une question sélectionnée...");
+    let questions = [];
     try {
         // Charger les questions depuis le fichier JSON
-        const questions = await fs.readJSON(questionsPath);
+        
+
+            questions = await parser.parse("./data/Questions_GIFT", "./data/questions.json");
+            questions = await fs.readJSON(questionsPath);
+            
 
         if (questions.length === 0) {
             console.log(chalk.red("La banque de questions est vide."));
