@@ -4,11 +4,6 @@ const path = require("path");
 // Charge le GiftParser
 const GiftParser = require("./GiftParser"); // Assure-toi que le chemin est correct
 
-// Dossier contenant les fichiers GIFT
-const inputFolder = path.join("C:", "Users", "yohan", "OneDrive", "Documents", "UTT Cours", "ISI1", "GL02", "GL02_YODI", "GL02_YODI", "data", "Questions_GIFT");
-
-// Fichier JSON de sortie
-const outputFile = path.join("C:", "Users", "yohan", "OneDrive", "Documents", "UTT Cours", "ISI1", "GL02", "GL02_YODI", "GL02_YODI", "data", "testQuestions.json");
 
 // Initialisation du GiftParser
 const parser = new GiftParser(true); // Paramètre pour afficher le tokenizing
@@ -18,9 +13,23 @@ let processedFiles = [];
 
 // Fonction pour lire tous les fichiers du dossier
 function readGiftFiles(folderPath) {
-    const files = fs.readdirSync(folderPath); // Liste les fichiers dans le dossier
-    const giftFiles = files.filter(file => file.endsWith(".gift")); // Filtre les fichiers .gift
-    return giftFiles.map(file => path.join(folderPath, file)); // Renvoie les chemins complets
+    let files = [];
+    try {
+        // List files in the folder
+        files = fs.readdirSync(folderPath);
+    } catch (err) {
+        if (err.code === 'ENOTDIR') {
+            // If the path is not a directory, treat it as a single file
+            return [folderPath];
+        } else {
+            console.error("Error reading directory or file:", err);
+            return [];
+        }
+    }
+
+    // Filter and return full paths of .gift files
+    const giftFiles = files.filter(file => file.endsWith(".gift")); 
+    return giftFiles.map(file => path.resolve(folderPath, file)); // Use path.resolve for absolute paths
 }
 
 // Fonction pour vérifier les doublons dans les questions
@@ -51,18 +60,18 @@ function processGiftFiles(filePaths) {
             return;
         }
 
-        console.log(`Processing file: ${filePath}`);
+        // console.log(`Processing file: ${filePath}`);
         const content = fs.readFileSync(filePath, "utf8"); // Lit le contenu du fichier
         const questions = parser.processFile(content); // Appelle la méthode processFile
         addUniqueQuestions(allQuestions, questions); // Ajoute les questions sans doublons
         processedFiles.push(filePath); // Marque le fichier comme traité
     });
 
-    return allQuestions;
+    return allQuestions.length > 0 ? allQuestions : [];
 }
 
 // Fonction principale
-function main() {
+async function parse(inputFolder, outputFile = "../data/questions.json") {
     try {
         const giftFiles = readGiftFiles(inputFolder);
         if (giftFiles.length === 0) {
@@ -72,13 +81,23 @@ function main() {
 
         const allQuestions = processGiftFiles(giftFiles);
 
-        // Écriture dans le fichier JSON
-        fs.writeFileSync(outputFile, JSON.stringify(allQuestions, null, 2), "utf8");
+        if (allQuestions.length === 0) {
+            console.log("No questions to write in the GIFT files.");
+            return;
+        }
+        else {
+            console.log(`Total unique questions found: ${allQuestions.length}`);
+            // Écriture dans le fichier JSON
+            fs.writeFileSync(outputFile, JSON.stringify(allQuestions, null, 2), "utf8");
+        }
         console.log(`All questions written to ${outputFile}`);
+        return allQuestions
     } catch (err) {
-        console.error("An error occurred:", err);
+        console.error("An error occurred while parsing :", err);
     }
 }
 
-// Exécute le script
-main();
+
+module.exports = {
+    parse,
+};

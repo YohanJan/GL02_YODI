@@ -401,7 +401,7 @@ if (!titleInfo || !titleInfo.suffix.endsWith("0")) {
         }
 
         if (this.showTokenize) {
-            console.log("Tokenized data:", this.parsedPOI);
+            // console.log("Tokenized data:", this.parsedPOI);
         }
 
         return this.parsedPOI;
