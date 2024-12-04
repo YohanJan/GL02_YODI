@@ -22,6 +22,7 @@ async function mainMenu() {
                 "Simuler un examen",
                 "Definir un profil d' examen",
                 "Definir un parser",
+                "Spec09",
                 "Quitter",
             ],
         },
@@ -42,9 +43,13 @@ async function mainMenu() {
             await examManager.MenuAnalyze();
             break;
         case "Definir un parser":
-           await parser.parse("./data/exam - 2024-12-04T13-47-39-685Z.gift","./data/questions.json");
+           await parser.parse("./data/Questions_GIFT","./data/questions.json");
             break;
-            
+
+        case "Spec09":
+            await examManager.compareExamProfile();
+            break;
+
         case "Quitter":
             console.log(chalk.green("Au revoir !"));
             process.exit(0);

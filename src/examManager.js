@@ -6,8 +6,6 @@ const inquirer = require("inquirer");
 const vega = require('vega');
 const vegalite = require('vega-lite');
 const puppeteer = require('puppeteer');
-const { file } = require("pdfkit");
-const parser = require("./processGiftFiles");
 
 const examSet = new Set();
 const limit = [3, 5]
@@ -20,10 +18,7 @@ async function selectQuestion() {
     console.log("Affichage d'une question sélectionnée...");
     try {
         // Charger les questions depuis le fichier JSON
-
-        questions = await parser.parse("./data/Questions_GIFT", "./data/questions.json"); 
-        questions = await fs.readJSON(questionsPath);
-
+        const questions = await fs.readJSON(questionsPath);
 
         if (questions.length === 0) {
             console.log(chalk.red("La banque de questions est vide."));
@@ -166,9 +161,7 @@ async function generateGiftFile(examSet) {
 async function analyze(toAnalyze) {
     try {
         // Charger les questions depuis le fichier JSON
-        console.log(chalk.red("Analyse des questions pour définir un profil d'examen..."));
         const questions = await fs.readJSON(toAnalyze);
-        console.log(chalk.green("Questions chargées avec succès."));
 
         if (questions.length === 0) {
             console.log(chalk.red("La banque de questions est vide."));
@@ -178,7 +171,7 @@ async function analyze(toAnalyze) {
         // Analyser les questions pour définir un profil d'examen
         questions.forEach(recognizeType)
         console.log(chalk.green("Profil d'examen défini avec succès."));
-
+        // console.log(chalk.bgCyan(JSON.stringify(profile, null, 2)));
     } catch (error) {
         console.error(chalk.red("Erreur lors du chargement des questions :"), error);
     }
@@ -186,57 +179,40 @@ async function analyze(toAnalyze) {
     
 }
 async function MenuAnalyze() {
-    const directoryPath = path.resolve("./data"); // Use absolute path
-    let parsedData = null;
-
-    try {
-        // Select a file
-        const filePath = await selectFile(directoryPath,'gift');
-        if (!filePath) {
-            console.log("No file selected. Exiting.");
-            return;
+    const directoryPath = path.join(__dirname, "../data"); // Remplacez par le répertoire cible
+    await selectFile(directoryPath).then((filePath) => {
+        if (filePath) {
+            console.log("Fichier sélectionné :", filePath);
         }
+    });
 
-        console.log("Fichier sélectionné :", filePath);
+    initProfile()
+
+    // Analyze the questions to define an exam profile
+    await analyze(questionsPath);
+
+    // Generate a chart from the profile
+    const spec = {
+        $schema: "https://vega.github.io/schema/vega-lite/v5.json",
+        description: "Question types and their counts",
+        data: { values: prepareProfile(profile) },
+        mark: "bar",
+        encoding: {
+            x: { field: "type", type: "ordinal", title: "Question Type" },
+            y: { field: "count", type: "quantitative", title: "Number of Questions" },
+            color: { field: "type", type: "nominal" },
+        },
+    };
+
+    renderChartToHtml(spec).catch((err) => console.error("Error generating Html:", err));
+    renderChartToPdf().catch((err) => console.error("Error generating PDF:", err));
+
+// Generate the PDF
 
 
-        // Parse the selected file
-        parsedData = await parser.parse(filePath, "./data/questions.json");
-        if (!parsedData) {
-            console.error("Parsing failed. Exiting.");
-            return;
-        }
-        console.log(JSON.stringify(parsedData, null, 2));
-        return null
 
-        // Initialize the profile
-        initProfile();
-
-        // Analyze the questions to define an exam profile
-        await analyze(parsedData);
-
-        // Generate a chart specification
-        const spec = {
-            $schema: "https://vega.github.io/schema/vega-lite/v5.json",
-            description: "Question types and their counts",
-            data: { values: prepareProfile(profile) },
-            mark: "bar",
-            encoding: {
-                x: { field: "type", type: "ordinal", title: "Question Type" },
-                y: { field: "count", type: "quantitative", title: "Number of Questions" },
-                color: { field: "type", type: "nominal" },
-            },
-        };
-
-        // Render the chart to both HTML and PDF
-        await renderChartToHtml(spec);
-        console.log("HTML chart generated successfully.");
-
-        await renderChartToPdf(spec);
-        console.log("PDF chart generated successfully.");
-    } catch (error) {
-        console.error("Error in MenuAnalyze:", error);
-    }
+    // console.log((path.(__dirname, "../data"))) // a faire
+    // console.log((path.join(__dirname, "../data/questions.json").split("\\").reverse())[0] );
 }
 // Render the chart to an HTML file
 async function renderChartToHtml(spec) {
@@ -273,42 +249,40 @@ async function renderChartToPdf() {
     
         console.log("PDF generated: chart.pdf");
 }
-async function selectFile(directory,type = "*") {
+async function selectFile(directory) {
     try {
-        // List files in the directory
+        // Lister les fichiers dans le répertoire
         const files = await fs.readdir(directory);
 
-        // Filter files by type (or include all if no type is specified)
+        // Vérifier quels éléments sont des fichiers
         const fileList = [];
         for (const file of files) {
             const filePath = path.join(directory, file);
             const stat = await fs.stat(filePath);
-
             if (stat.isFile()) {
-                // If a type is provided, filter by extension
-                if (type === "*" || file.endsWith(`.${type}`)) {
-                    fileList.push(file);
-                }
+                fileList.push(file);
             }
         }
 
+        // Si aucun fichier n'est trouvé
         if (fileList.length === 0) {
-            console.log(`No files of type '${type}' found in directory: ${directory}`);
+            console.log("Aucun fichier trouvé dans ce répertoire.");
             return null;
         }
 
-        // Display the file list and let the user select one
+        // Afficher les fichiers pour sélection
         const { selectedFile } = await inquirer.prompt([
             {
                 type: "list",
                 name: "selectedFile",
-                message: `Select a file${type !== "*" ? ` of type .${type}` : ""}:`,
+                message: "Sélectionnez un fichier :",
                 choices: fileList,
             },
         ]);
 
-        return path.join(directory, selectedFile); // Return the full path of the selected file
-    }  catch (error) {
+        // Retourner le chemin complet du fichier sélectionné
+        return path.join(directory, selectedFile);
+    } catch (error) {
         console.error("Erreur lors de la lecture du répertoire :", error);
     }
 }
@@ -345,8 +319,79 @@ function initProfile(){
         true_false: { count: 0, questions: [] },
     };
 }
+ //SPEC09 : Comparer le profil d'un examen avec le profil moyen d'un ou plusieurs fichiers de la banque de données.
+async function compareExamProfile() {
+    console.log(chalk.blue("=== Comparaison du profil d'examen avec la banque de données ==="));
+
+    // Dresser le profil de l'examen
+    console.log(chalk.blue("Étape 1 : Analyse du profil d'examen"));
+    const examProfile = {};
+    initProfile(); // Réinitialise le profil global
+    await analyze(questionsPath); // Analyse les questions de l'examen
+    Object.assign(examProfile, profile); // Copie le profil dans `examProfile`
+
+    console.log(chalk.green("Profil de l'examen établi :"));
+    console.log(chalk.bgCyan(JSON.stringify(examProfile, null, 2)));
+
+    // Dresser le profil moyen de la banque de données
+    console.log(chalk.blue("Étape 2 : Analyse des fichiers de la banque de données"));
+    const directoryPath = path.join(__dirname, "../data"); // Répertoire contenant les fichiers
+    const files = []; // Liste des fichiers sélectionnés pour analyse
+    let averageProfile = {};
+    initProfile(); // Réinitialise le profil global
+
+    // Charger et analyser plusieurs fichiers
+    while (true) {
+        const selectedFile = await selectFile(directoryPath);
+        if (!selectedFile) break; // Sort de la boucle si aucun fichier n'est sélectionné
+        files.push(selectedFile);
+
+        console.log(chalk.green("Analyse du fichier sélectionné :", selectedFile));
+        await analyze(selectedFile);
+    }
+
+    // Calcul du profil moyen
+    if (files.length > 0) {
+        averageProfile = calculateAverageProfile(files.length);
+        console.log(chalk.green("Profil moyen de la banque établi :"));
+        console.log(chalk.bgCyan(JSON.stringify(averageProfile, null, 2)));
+    } else {
+        console.log(chalk.red("Aucun fichier n'a été sélectionné pour calculer le profil moyen."));
+        return;
+    }
+
+    // Comparer les deux profils
+    console.log(chalk.blue("Étape 3 : Comparaison des profils"));
+    compareProfiles(examProfile, averageProfile);
+}
+function calculateAverageProfile(totalFiles) {
+    const averageProfile = {};
+    for (const [type, data] of Object.entries(profile)) {
+        averageProfile[type] = {
+            count: data.count / totalFiles,
+            questions: [...data.questions], // On garde la liste des questions (optionnel)
+        };
+    }
+    return averageProfile;
+}
+function compareProfiles(profile1, profile2) {
+    console.log(chalk.blue("Comparaison des types de questions :"));
+    for (const [type, data1] of Object.entries(profile1)) {
+        const data2 = profile2[type] || { count: 0 };
+        const difference = data1.count - data2.count;
+
+        console.log(
+            `${type.toUpperCase()}: Examen = ${data1.count}, Moyenne = ${data2.count.toFixed(2)}, Écart = ${difference.toFixed(2)}`
+        );
+
+        if (difference !== 0) {
+            console.log(chalk.yellow(`L'examen contient un écart de ${difference} questions de type ${type}.`));
+        }
+    }
+}
+
 module.exports = {
-    makeExamGift, MenuAnalyze
+    makeExamGift, MenuAnalyze, compareExamProfile,
 };
 
 
