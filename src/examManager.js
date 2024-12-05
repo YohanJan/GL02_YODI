@@ -7,6 +7,7 @@ const vega = require('vega');
 const vegalite = require('vega-lite');
 const puppeteer = require('puppeteer');
 const readline = require("readline");
+const parser = require("./processGiftFiles");
 
 const examSet = new Set();
 const limit = [3, 5]
@@ -242,7 +243,8 @@ async function simulateExam() {
  
     // Charger l'examen
     //const questions = loadExam(selectedExam);
-    const questions = await fs.readJSON(questionsPath);
+    questions = await parser.parse("./data/"+selectedExam, "./data/questions.json");
+    questions = await fs.readJSON(questionsPath);
   
     if (!questions || questions.length === 0) {
       console.log("L'examen sélectionné est vide ou invalide.");
