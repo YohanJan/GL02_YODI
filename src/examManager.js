@@ -13,7 +13,7 @@ const examSet = new Set();
 const limit = [3, 5]
 
 const questionsPath = path.join(__dirname, "../data/questions.json");
-profile = {}
+let profile = {}
 
 
 async function selectQuestion() {
@@ -177,19 +177,14 @@ async function generateGiftFile(examSet) {
 }
 async function analyze(toAnalyze) {
     try {
-        // Charger les questions depuis le fichier JSON
-        console.log(chalk.red("Analyse des questions pour définir un profil d'examen..."));
-        const questions = toAnalyze
-        // const questions = await fs.readJSON(toAnalyze);dataToParse
-        console.log(chalk.green("Questions chargées avec succès."));
 
-        if (questions.length === 0) {
+        if (toAnalyze.length === 0) {
             console.log(chalk.red("La banque de questions est vide."));
             return null;
         }
 
         // Analyser les questions pour définir un profil d'examen
-        questions.forEach(recognizeType)
+        toAnalyze.forEach(recognizeType)
         console.log(chalk.green("Profil d'examen défini avec succès."));
 
     } catch (error) {
@@ -201,33 +196,32 @@ async function analyze(toAnalyze) {
 async function MenuAnalyze() {
     const directoryPath = path.resolve("./data"); // Use absolute path
     let parsedData = null;
+    let analyzedData = null;
     // Initialize the profile
     initProfile();
 
     try {
         // Select a file
         const filePath = await selectFile(directoryPath,'gift');
+        // verify if a file is selected
         if (!filePath) {
             console.log("No file selected. Exiting.");
             return;
         }
-
         console.log("Fichier sélectionné :", filePath);
-
 
         // Parse the selected file
         parsedData = await parser.parse(filePath, "./data/questions.json");
-        
-        console.log(parsedData)
-        // dataToParse = await fs.readJSON("./data/questions.json");
+        // verify if the file is parsed
         if (!parsedData) {
             console.log("No data to analyze. Exiting.");
             return;
-        }
-
+        }     
+        console.log(parsedData)
+        
         // Analyze the questions to define an exam profile
-        await analyze(parsedData);
-
+        analyzedData = await analyze(parsedData);
+ 
         // Generate a chart specification
         const spec = {
             $schema: "https://vega.github.io/schema/vega-lite/v5.json",
@@ -240,6 +234,8 @@ async function MenuAnalyze() {
                 color: { field: "type", type: "nominal" },
             },
         };
+
+        console.log(prepareProfile(profile))
 
         // Render the chart to both HTML and PDF
         await renderChartToHtml(spec);

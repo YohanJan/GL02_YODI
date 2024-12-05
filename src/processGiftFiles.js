@@ -49,6 +49,8 @@ function addUniqueQuestions(existingQuestions, newQuestions) {
             existingQuestions.push(newQuestion);
         }
     });
+
+    return existingQuestions;
 }
 
 // Fonction pour traiter chaque fichier
@@ -56,6 +58,7 @@ function processGiftFiles(filePaths) {
     let allQuestions = [];
 
     filePaths.forEach(filePath => {
+        
         if (processedFiles.includes(filePath)) {
             console.log(`Skipping already processed file: ${filePath}`);
             return;
@@ -63,7 +66,8 @@ function processGiftFiles(filePaths) {
 
         const content = fs.readFileSync(filePath, "utf8"); // Lit le contenu du fichier
         const questions = parser.processFile(content); // Appelle la méthode processFile
-        addUniqueQuestions(allQuestions, questions); // Ajoute les questions sans doublons
+
+        allQuestions = addUniqueQuestions(allQuestions, questions); // Ajoute les questions sans doublons
         processedFiles.push(filePath); // Marque le fichier comme traité
     });
 
@@ -72,6 +76,8 @@ function processGiftFiles(filePaths) {
 
 // Fonction principale
 async function parse(inputPath, outputFile = "./data/questions.json") {
+    processedFiles = [];
+    console.log(inputPath)
     try {
         const giftFiles = getGiftFilePaths(inputPath); // Récupère les fichiers GIFT (dossier ou fichier)
         if (giftFiles.length === 0) {

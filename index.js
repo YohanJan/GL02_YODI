@@ -42,6 +42,9 @@ async function mainMenu() {
             await examManager.MenuAnalyze();
             break;
         case "Definir un parser":
+           await parser.parse("./data/exam - 2024-12-04T17-07-04-353Z.gift","./data/questions.json");
+           await parser.parse("./data/exam - 2024-12-04T17-07-04-353Z.gift","./data/questions.json");
+           await parser.parse("./data/exam - 2024-12-04T17-10-04-233Z.gift","./data/questions.json");
            await parser.parse("./data/exam - 2024-12-04T17-10-04-233Z.gift","./data/questions.json");
             break;
             
