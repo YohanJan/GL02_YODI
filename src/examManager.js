@@ -6,11 +6,14 @@ const inquirer = require("inquirer");
 const vega = require('vega');
 const vegalite = require('vega-lite');
 const puppeteer = require('puppeteer');
+const readline = require("readline");
 
 const examSet = new Set();
 const limit = [3, 5]
 
 const questionsPath = path.join(__dirname, "../data/questions.json");
+// Dossier contenant les fichiers d'examen
+const examsPath = path.join(__dirname, '../data');
 profile = {}
 
 async function researchQuestions(questions, keyword, categorie) {
@@ -174,6 +177,198 @@ async function generateGiftFile(examSet) {
         console.error(chalk.red("Erreur lors de la génération du fichier GIFT :"), error);
     }
 }
+
+// Fonction pour afficher les examens disponibles
+function listExams() {
+return fs.readdirSync(examsPath).filter(file => (file.startsWith('exam')&file.endsWith('.gift')));}
+
+
+// Fonction pour lire un fichier et charger les questions
+function loadExam(fileName) {  
+    const filePath = path.join(examsPath, fileName);
+    const content = fs.readFileSync(filePath, 'utf-8');
+  try {
+    return JSON.parse(content);
+  } catch {
+    console.warn("Fichier non JSON détecté. Tentative de parser comme GIFT...");
+  }
+}
+
+// Fonction pour poser une question à l'utilisateur
+function askQuestion(rl, question) {
+  return new Promise(resolve => {rl.question(question, resolve);});
+}
+async function simulateExam() {
+    const exams = listExams();
+  
+    if (exams.length === 0) {
+      console.log("Aucun examen disponible.");
+      return null;
+    }
+  
+    // Afficher la liste des examens
+    console.log("Examens disponibles :");
+    exams.forEach((exam, index) => {
+      console.log(`${index + 1}. ${exam}`);
+    });
+  
+    // Choisir un examen
+  const { selectedExam } = await inquirer.prompt([
+      {
+          type: "list",
+          name: "selectedExam",
+          message: "Sélectionnez un examen à simuler :",
+          choices: exams.map((exam, index) => ({
+              name: `${index + 1}. ${exam}`,
+              value: exam, // On passe directement l'objet question sélectionné
+          })),
+      },
+  ]);
+ 
+    // Charger l'examen
+    //const questions = loadExam(selectedExam);
+    const questions = await fs.readJSON(questionsPath);
+  
+    if (!questions || questions.length === 0) {
+      console.log("L'examen sélectionné est vide ou invalide.");
+      return;
+    }
+  
+    // Simuler l'examen
+    console.log("Début de la simulation :\n");
+    const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout,
+      });
+    let score = 0;
+  
+    for (const [index, question] of questions.entries()) {
+        if (question.type === "multiple_choice" || question.type === "multiple_choice_feedback") {
+            console.log(chalk.blue(`Question ${index + 1}: ${question.question}`));
+            console.log("Options :");
+            question.options.forEach((option, index) => {
+                console.log(`  ${index + 1}. ${option.text}`);
+            });
+        } else if (question.type === "true_false") {
+            console.log(chalk.blue(`Question ${index + 1}: ${question.question}`));
+            console.log("Répondez par vrai ou faux");
+    } else if (question.type === "matching") {
+        console.log(chalk.blue(`Question ${index + 1}: ${question.question}`));
+        question.pairs.forEach((pairs) => {
+            console.log(`${pairs.term}`);
+            console.log(`${pairs.match}`);
+        });
+        console.log("Ecrire les réponses sous cette forme: termA, repA; termB, repB; termC, repC");
+    }  else {
+        console.log(chalk.blue(`Question ${index + 1}: ${question.question}`));
+    }
+      const answer = await askQuestion(rl, "Votre réponse : ");
+      let correctAnswer;
+      switch (question.type) {
+        case "multiple_choice":
+            correctAnswer = question.options.filter(option => option.is_correct).map(option => option.text);
+            break;
+        case "true_false":
+            correctAnswer = question.answer ? "vrai" : "faux";
+            break;
+        case "short_answer":
+            if (question.correct_answers.includes(answer) === true) {
+                score++;
+                console.log("Bonne réponse!");
+                console.log(`score= ${score}`);
+            } else {
+                console.log("Mauvaise réponse! La bonne réponse était : " + question.correct_answers);
+                console.log(`score= ${score}`);
+            }
+            break;
+        case "matching":
+            correctAnswer = question.pairs; 
+            const response = answer.split(";").map(pair => {
+            const [term, match] = pair.split(",").map(item => item.trim()); // Séparer chaque paire en termes et réponses
+            return { term, match };
+            });
+
+            // Comparer chaque élément de la réponse avec l'élément correct
+            let correct = true;
+            for (let i = 0; i < correctAnswer.length; i++) {
+                if (correctAnswer[i].term.toLowerCase() !== response[i].term.toLowerCase() || 
+                    correctAnswer[i].match.toLowerCase() !== response[i].match.toLowerCase()) {
+                    correct = false;
+                    break; // Si une paire est incorrecte, on arrête la comparaison
+                }
+            }
+
+            if (correct) {
+                console.log("Bonne réponse !");
+                score++;
+            } else {
+                console.log("Mauvaise réponse !");
+            }
+
+            console.log(`score= ${score}`);
+            break;
+        case "cloze":
+            correctAnswer = question.answers;
+            const reponse = answer.toString().split(",").map(item => item.trim().toLowerCase());
+            const isCorrect = correctAnswer.every((ans, idx) => 
+                reponse[idx] && reponse[idx] === ans.toLowerCase()
+            );
+            if (isCorrect) {
+                console.log("Bonne réponse!");
+                score++;
+                console.log(`score= ${score}`);
+            } else {
+                console.log("Mauvaise réponse!");
+                console.log(`La bonne réponse était : ${correctAnswer.join(", ")}`);
+                console.log(`score= ${score}`);
+            }
+            break;
+        case "numerical":
+            const tolerance = question.tolerance;
+            const correctValue = question.correct_answer;
+            // Calculer les bornes valides pour la tolérance
+            const lowerBound = correctValue - tolerance;
+            const upperBound = correctValue + tolerance;
+            // Vérifier si la réponse est dans la plage acceptable
+            const answerNumeric = parseFloat(answer);  // Convertir la réponse en nombre
+
+            if (answerNumeric >= lowerBound && answerNumeric <= upperBound) {
+                score++;
+                console.log("Bonne réponse !");
+            } else {
+            console.log("Mauvaise réponse !");
+            }
+
+            console.log(`score= ${score}`);
+            break;
+        case "multiple_choice_feedback":
+            correctAnswer = question.options
+                    .filter(option => option.is_correct)
+                    .map(option => option.text);
+                break;
+        default : 
+            correctAnswer = null;
+            break;
+      }
+
+      if(question.type != "matching" && question.type != "cloze") {
+        if(correctAnswer && answer) {
+        if(!answer) {
+            console.log("Réponse invalide. Veuillez entrer une réponse.");
+        } else if (correctAnswer.toString().toLowerCase() === answer.toString().toLowerCase().trim()) {
+            console.log("Bonne réponse !");
+            score++;
+            console.log(`score= ${score}`);
+      } else {
+            console.log(`Mauvaise réponse. La bonne réponse était : ${correctAnswer}`);
+      }
+    console.log();
+    } }
+}
+    console.log(`Examen terminé ! Votre score : ${score}/${questions.length}`);
+    rl.close();
+}
+
 async function analyze(toAnalyze) {
     try {
         // Charger les questions depuis le fichier JSON
@@ -336,7 +531,7 @@ function initProfile(){
     };
 }
 module.exports = {
-    makeExamGift, MenuAnalyze
+    makeExamGift, MenuAnalyze, simulateExam
 };
 
 
