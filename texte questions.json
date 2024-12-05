@@ -1,0 +1,63 @@
+[
+    {
+        "type": "multiple_choice",
+        "title": "Addition simple",
+        "question": "Quel est le résultat de 2 + 2 ?",
+        "options": [
+            { "text": "3", "is_correct": false },
+            { "text": "4", "is_correct": true },
+            { "text": "5", "is_correct": false }
+        ]
+    },
+    {
+        "type": "true_false",
+        "title": "Forme de la Terre",
+        "question": "La Terre est plate.",
+        "answer": false
+    },
+    {
+        "type": "short_answer",
+        "title": "Couleur du ciel",
+        "question": "Quelle est la couleur du ciel ?",
+        "correct_answers": ["bleu", "azur"]
+    },
+    {
+        "type": "matching",
+        "title": "Capitales des pays",
+        "question": "Associez les pays avec leurs capitales.",
+        "pairs": [
+            { "term": "France", "match": "Paris" },
+            { "term": "Allemagne", "match": "Berlin" },
+            { "term": "Espagne", "match": "Madrid" }
+        ]
+    },
+    {
+        "type": "cloze",
+        "title": "Trouver la capitale",
+        "question": "La capitale de l'Italie est {} et c'est situe en {}.",
+        "answers": ["Rome", "Europe"]
+    },
+    {
+        "type": "cloze",
+        "title": "Trouver la capitale du Japon",
+        "question": "La capitale de l'Italie est {} et c'est situe en {}.",
+        "answers": ["Tokyo", "Seoul"]
+    },
+    {
+        "type": "numerical",
+        "title": "Valeur de π",
+        "question": "Quelle est la valeur approximative de π ?",
+        "correct_answer": 3.14,
+        "tolerance": 0.01
+    },
+    {
+        "type": "multiple_choice_feedback",
+        "title": "Langage populaire",
+        "question": "Quel langage est utilisé principalement pour le développement web ?",
+        "options": [
+            { "text": "Java", "is_correct": false, "feedback": "Pas tout à fait, essayez encore." },
+            { "text": "JavaScript", "is_correct": true, "feedback": "Correct, c'est la bonne réponse !" },
+            { "text": "Python", "is_correct": false, "feedback": "Non, ce n'est pas spécifique au web." }
+        ]
+    }
+]

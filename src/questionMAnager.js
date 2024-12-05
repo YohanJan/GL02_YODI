@@ -6,6 +6,42 @@ const parser = require("./processGiftFiles");
 
 const questionsPath = path.join(__dirname, "../data/questions.json");
 
+async function researchQuestions() {
+    console.log("Recherche de questions...");
+    try {
+
+        //parser to json
+        const questions = await fs.readJSON(questionsPath);
+
+        const { keyword } = await inquirer.prompt([
+            {
+                type: "string",
+                name: "keyword",
+                message: `Entrer un mot clé de recherche`,
+            },
+        ]);
+    
+        const keywordLower = keyword ? keyword.toString().toLowerCase() : "";
+
+
+        const filteredQuestions = questions.filter(question => question.question.toString().toLowerCase().includes(keywordLower)
+        );
+
+        console.log( filteredQuestions.length > 0 ? displayListQuestions(filteredQuestions) : "Question not found" )
+
+        
+        } catch (error) {
+            console.error(chalk.red("Erreur lors de la recherche :"), error);
+            return null;
+        }
+}
+function displayListQuestions(questions) {
+    console.log("Liste des questions trouvées :");
+    questions.forEach((question, index) => {
+        console.log(`${index + 1}. ${question.title} [${question.type}]`);
+        console.log(`--> ${question.question.substring(0, 90)} `);
+    });
+}
 async function selectQuestion() {
     console.log("Affichage d'une question sélectionnée...");
     let questions = [];
@@ -21,7 +57,7 @@ async function selectQuestion() {
             console.log(chalk.red("La banque de questions est vide."));
             return null;
         }
-
+        
         // Afficher une liste des questions pour sélection
         const { selectedQuestion } = await inquirer.prompt([
             {
@@ -125,5 +161,5 @@ async function viewQuestionDetails() {
     }
 }
 module.exports = {
-    viewQuestionDetails,viewQuestion,selectQuestion
+    researchQuestions,viewQuestionDetails,viewQuestion,selectQuestion
 };
