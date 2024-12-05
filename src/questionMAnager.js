@@ -11,7 +11,8 @@ async function researchQuestions() {
     try {
 
         //parser to json
-        const questions = await fs.readJSON(questionsPath);
+        questions = await parser.parse("./data/Questions_GIFT", "./data/questions.json");
+        questions = await fs.readJSON(questionsPath);
 
         const { keyword } = await inquirer.prompt([
             {
@@ -28,7 +29,7 @@ async function researchQuestions() {
         );
 
         console.log( filteredQuestions.length > 0 ? displayListQuestions(filteredQuestions) : "Question not found" )
-
+        
         
         } catch (error) {
             console.error(chalk.red("Erreur lors de la recherche :"), error);

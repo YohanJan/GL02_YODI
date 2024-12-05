@@ -17,22 +17,22 @@ const questionsPath = path.join(__dirname, "../data/questions.json");
 const examsPath = path.join(__dirname, '../data');
 profile = {}
 
-async function researchQuestions(questions, keyword, categorie) {
-    console.log("Recherche de questions...");
-    try {
-        // Chargement et affichage des questions de la banque
-        questions = await fs.readJSON(questionsPath);
-        console.log("Questions en notre possession : ", questions);
-        const keywordLower = keyword.toLowerCase();
-        return questions.filter(question => {
-            const contientKeyword = question.text.toLowerCase().includes(keywordLower);
-            const memeCategorie = categorie ? question.categorie === categorie : true;
-            return contientKeyword && memeCategorie;});
-        } catch (error) {
-            console.error(chalk.red("Erreur lors de la recherche :"), error);
-            return null;
-        }
-}
+// async function researchQuestions(questions, keyword, categorie) {
+//     console.log("Recherche de questions...");
+//     try {
+//         // Chargement et affichage des questions de la banque
+//         questions = await fs.readJSON(questionsPath);
+//         console.log("Questions en notre possession : ", questions);
+//         const keywordLower = keyword.toLowerCase();
+//         return questions.filter(question => {
+//             const contientKeyword = question.text.toLowerCase().includes(keywordLower);
+//             const memeCategorie = categorie ? question.categorie === categorie : true;
+//             return contientKeyword && memeCategorie;});
+//         } catch (error) {
+//             console.error(chalk.red("Erreur lors de la recherche :"), error);
+//             return null;
+//         }
+// }
 
 async function selectQuestion() {
     console.log("Affichage d'une question sélectionnée...");
