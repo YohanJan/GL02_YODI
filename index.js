@@ -3,8 +3,8 @@ const chalk = require('chalk');
 const inquirer = require('inquirer');
 const questionManager = require('./src/questionMAnager.js');
 const examManager = require('./src/examManager.js');
-const parser = require('./src/processGiftFiles.js')
-const path = require("path");
+const VcardGenerator = require('./src/VcardGenerator.js');
+const parser = require("./src/processGiftFiles");
 
 async function mainMenu() {
     console.log(chalk.blue("Bienvenue dans l'outil SRYEM GIFT Utility"));
@@ -21,7 +21,7 @@ async function mainMenu() {
                 "Générer une VCard",
                 "Simuler un examen",
                 "Definir un profil d' examen",
-                "Definir un parser",
+                "Parser la base de données",
                 "Spec09",
                 "Quitter",
             ],
@@ -30,7 +30,7 @@ async function mainMenu() {
 
     switch (action) {
         case "Rechercher des questions":
-            // await examManager.test();
+            await questionManager.researchQuestions();
             break;
         case "Visualiser une question":
             await questionManager.viewQuestionDetails();
@@ -38,12 +38,17 @@ async function mainMenu() {
         case "Créer un examen GIFT":
             await examManager.makeExamGift();
             break;
-                
+        case "Générer une VCard":
+            await VcardGenerator.generateVCard();
+            break;
+        case "Simuler un examen":
+            await examManager.simulateExam();
+            break;
         case "Definir un profil d' examen":
             await examManager.MenuAnalyze();
             break;
-        case "Definir un parser":
-           await parser.parse("./data/Questions_GIFT","./data/questions.json");
+        case "Parser la base de données":
+            await parser.parse("./data/Questions_GIFT","./data/questions.json");
             break;
 
         case "Spec09":

@@ -9,7 +9,13 @@ var GiftParser = function (sTokenize) {
     // Stockage temporaire pour l'association x.0 et x.1, x.2...
     this.questionMappings = {};
     this.readingQuestionStorage = {}; // Stocke les textes Reading associés aux préfixes complets
-
+    
+this.reset = function () {
+    this.parsedPOI = []; // Réinitialiser le tableau des résultats
+    this.questionMappings = {}; // Réinitialiser les mappings entre questions
+    this.readingQuestionStorage = {}; // Réinitialiser les textes Reading stockés
+    this.errorCount = 0; // Réinitialiser le compteur d'erreurs
+};
     /** Analyse une entrée avec type, titre et question.
  * @param {string} title - Le titre du POI.
  * @param {string} question - La question associée.
@@ -284,6 +290,7 @@ this.extractMultipleChoiceFeedback = function (question) {
      * @returns {Array} Liste des POIs extraits.
      */
     this.processFile = function (input) {
+        this.reset(); // Réinitialiser toutes les données avant de traiter le fichier
         const lines = input.split("\n");
 
         let currentTitle = null;

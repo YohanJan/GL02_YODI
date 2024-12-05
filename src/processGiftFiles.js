@@ -1,31 +1,36 @@
 const fs = require("fs");
 const path = require("path");
-
-// Charge le GiftParser
 const GiftParser = require("./GiftParser");
 const chalk = require("chalk");
 
 // Initialisation du GiftParser
 const parser = new GiftParser(true); // Paramètre pour afficher le tokenizing
+parser.isInitialized = false; // Ajout de la variable de suivi
+
+// Ajout de la méthode reset pour réinitialiser le GiftParser
+parser.reset = function () {
+    this.parsedPOI = [];
+    this.questionMappings = {};
+    this.readingQuestionStorage = {};
+    this.errorCount = 0;
+    this.isInitialized = true; // Marquer comme initialisé après réinitialisation
+    console.log(chalk.green("GiftParser réinitialisé."));
+};
 
 // Liste des fichiers déjà traités
 let processedFiles = [];
 
-// Fonction pour lire un fichier ou un dossier
+// Fonction pour lire un fichier ou un dossier et obtenir les chemins des fichiers .gift
 function getGiftFilePaths(inputPath) {
     try {
         const stats = fs.statSync(inputPath);
 
         if (stats.isDirectory()) {
-            // Si c'est un dossier, liste tous les fichiers .gift
             const files = fs.readdirSync(inputPath).filter(file => file.endsWith(".gift"));
-            return files.map(file => path.resolve(inputPath, file)); // Résolution des chemins absolus
+            return files.map(file => path.resolve(inputPath, file));
         } else if (stats.isFile() && inputPath.endsWith(".gift")) {
-            // Si c'est un fichier unique, retourner un tableau avec ce fichier
-            console.log(chalk.red(`Fichier unique trouvé : ${inputPath}`));
             return [path.resolve(inputPath)];
         } else {
-            console.error("Le chemin fourni n'est ni un fichier .gift valide ni un dossier.");
             return [];
         }
     } catch (err) {
@@ -37,8 +42,8 @@ function getGiftFilePaths(inputPath) {
 // Fonction pour vérifier les doublons dans les questions
 function addUniqueQuestions(existingQuestions, newQuestions) {
     if (!Array.isArray(newQuestions)) {
-        console.warn("addUniqueQuestions: 'newQuestions' is not un tableau valide. Ignoré.");
-        return;
+        console.warn("addUniqueQuestions: 'newQuestions' n'est pas un tableau valide. Ignoré.");
+        return existingQuestions;
     }
 
     newQuestions.forEach(newQuestion => {
@@ -49,11 +54,20 @@ function addUniqueQuestions(existingQuestions, newQuestions) {
             existingQuestions.push(newQuestion);
         }
     });
+
+    return existingQuestions;
 }
 
-// Fonction pour traiter chaque fichier
-function processGiftFiles(filePaths) {
+// Fonction pour traiter les fichiers .gift et collecter les questions
+function processGiftFiles(filePaths, existingProcessedFiles = []) {
     let allQuestions = [];
+    const processedFiles = [...existingProcessedFiles]; // Copie locale
+
+    // Vérifier si le parser a été réinitialisé
+    if (!parser.isInitialized) {
+        console.log(chalk.yellow("GiftParser non initialisé. Réinitialisation en cours..."));
+        parser.reset();
+    }
 
     filePaths.forEach(filePath => {
         if (processedFiles.includes(filePath)) {
@@ -61,36 +75,41 @@ function processGiftFiles(filePaths) {
             return;
         }
 
-        const content = fs.readFileSync(filePath, "utf8"); // Lit le contenu du fichier
-        const questions = parser.processFile(content); // Appelle la méthode processFile
-        addUniqueQuestions(allQuestions, questions); // Ajoute les questions sans doublons
-        processedFiles.push(filePath); // Marque le fichier comme traité
+        console.log(`Traitement du fichier : ${filePath}`);
+        const content = fs.readFileSync(filePath, "utf8");
+        const questions = parser.processFile(content);
+
+        console.log(`Questions trouvées dans ${filePath} : ${questions.length}`);
+        allQuestions = addUniqueQuestions(allQuestions, questions);
+        processedFiles.push(filePath);
     });
 
-    return allQuestions.length > 0 ? allQuestions : [];
+    return { allQuestions, processedFiles };
 }
 
-// Fonction principale
-async function parse(inputPath, outputFile = "./data/questions.json") {
+// Fonction principale de parsing
+async function parse(inputPath, outputPath) {
+    let processedFiles = []; // Déclaration locale uniquement
+
+    console.log("Chemin d'entrée :", inputPath);
+    console.log("Chemin de sortie :", outputPath);
+
     try {
-        const giftFiles = getGiftFilePaths(inputPath); // Récupère les fichiers GIFT (dossier ou fichier)
+        const giftFiles = getGiftFilePaths(inputPath);
         if (giftFiles.length === 0) {
             console.log("Aucun fichier GIFT trouvé.");
             return;
         }
 
-        const allQuestions = processGiftFiles(giftFiles);
-        console.log("Toutes les questions ont été traitées.");
+        const { allQuestions, processedFiles: newProcessedFiles } =
+            processGiftFiles(giftFiles, processedFiles);
 
-        if (allQuestions.length === 0) {
-            console.log("Aucune question trouvée dans les fichiers GIFT.");
-            return;
-        } else {
-            console.log(`Total unique questions found: ${allQuestions.length}`);
-            // Écriture dans le fichier JSON
-            fs.writeFileSync(outputFile, JSON.stringify(allQuestions, null, 2), "utf8");
-        }
-        console.log(`Toutes les questions ont été écrites dans ${outputFile}`);
+        console.log("Toutes les questions ont été traitées.");
+        console.log(`Total unique questions trouvées : ${allQuestions.length}`);
+
+        fs.writeFileSync(outputPath, JSON.stringify(allQuestions, null, 2), "utf8");
+        console.log(`Toutes les questions ont été écrites dans ${outputPath}`);
+
         return allQuestions;
     } catch (err) {
         console.error("Une erreur est survenue lors du parsing :", err);
