@@ -119,29 +119,41 @@ async function generateGiftFile(examSet) {
                     const multipleChoiceOptions = question.options
                         .map((option) => (option.is_correct ? `=${option.text}` : `~${option.text}`))
                         .join(" ");
-                    return `::Question ${index + 1}:: ${question.question} { ${multipleChoiceOptions} }`;
+                    return `::${question.title}:: ${question.question} { ${multipleChoiceOptions} }`;
 
                 case "true_false":
-                    return `::Question ${index + 1}:: ${question.question} { ${question.answer ? "T" : "F"} }`;
+                    return `::${question.title}:: ${question.question} { ${question.answer ? "T" : "F"} }`;
 
                 case "short_answer":
                     const shortAnswers = question.correct_answers.map((ans) => `=${ans}`).join(" ");
-                    return `::Question ${index + 1}:: ${question.question} { ${shortAnswers} }`;
+                    return `::${question.title}:: ${question.question} { ${shortAnswers} }`;
 
                 case "matching":
                     const matchingPairs = question.pairs
                         .map((pair) => `=${pair.term} -> ${pair.match}`)
                         .join(" ");
-                    return `::Question ${index + 1}:: ${question.question} { ${matchingPairs} }`;
+                    return `::${question.title}:: ${question.question} { ${matchingPairs} }`;
 
                 case "cloze":
-                    return `::Question ${index + 1}:: ${question.question}`;
+                    const clozeQuestion = question.answers.reduce((formatted, answer, index) => {
+                        return formatted.replace(`(${index + 1})`, `{=${answer}}`);
+                    }, question.question);
+                    
+                        return `::${question.title}:: ${clozeQuestion}`;
 
                 case "numerical":
-                    return `::Question ${index + 1}:: ${question.question} {#${question.correct_answer}:${question.tolerance}}`;
+                    return `::${question.title}:: ${question.question} {#${question.correct_answer}:${question.tolerance}}`;
 
+                case "multiple_choice_feedback":
+                    const feedbackOptions = question.options.map((option) => {
+                        const prefix = option.is_correct ? "=" : "~";
+                        return `${prefix}${option.text}#${option.feedback}`;
+                    }).join(" ");
+                    return `::${question.title}:: ${question.question} { ${feedbackOptions} }`;
+                case "open":
+                    return `::${question.title}:: ${question.question} {}`;
                 default:
-                    console.log(chalk.yellow(`Type de question inconnu : ${question.type}`));
+                    console.log(chalk.yellow(`Type de question non pris en charge : ${question.type}`));
                     return null;
             }
         })
@@ -161,7 +173,10 @@ async function generateGiftFile(examSet) {
 async function analyze(toAnalyze) {
     try {
         // Charger les questions depuis le fichier JSON
-        const questions = await fs.readJSON(toAnalyze);
+        console.log(chalk.red("Analyse des questions pour définir un profil d'examen..."));
+        const questions = toAnalyze
+        // const questions = await fs.readJSON(toAnalyze);dataToParse
+        console.log(chalk.green("Questions chargées avec succès."));
 
         if (questions.length === 0) {
             console.log(chalk.red("La banque de questions est vide."));
@@ -179,41 +194,59 @@ async function analyze(toAnalyze) {
     
 }
 async function MenuAnalyze() {
-    const directoryPath = path.join(__dirname, "../data"); // Remplacez par le répertoire cible
-    await selectFile(directoryPath).then((filePath) => {
-        if (filePath) {
-            console.log("Fichier sélectionné :", filePath);
+    const directoryPath = path.resolve("./data"); // Use absolute path
+    let parsedData = null;
+    // Initialize the profile
+    initProfile();
+
+    try {
+        // Select a file
+        const filePath = await selectFile(directoryPath,'gift');
+        if (!filePath) {
+            console.log("No file selected. Exiting.");
+            return;
         }
-    });
 
-    initProfile()
-
-    // Analyze the questions to define an exam profile
-    await analyze(questionsPath);
-
-    // Generate a chart from the profile
-    const spec = {
-        $schema: "https://vega.github.io/schema/vega-lite/v5.json",
-        description: "Question types and their counts",
-        data: { values: prepareProfile(profile) },
-        mark: "bar",
-        encoding: {
-            x: { field: "type", type: "ordinal", title: "Question Type" },
-            y: { field: "count", type: "quantitative", title: "Number of Questions" },
-            color: { field: "type", type: "nominal" },
-        },
-    };
-
-    renderChartToHtml(spec).catch((err) => console.error("Error generating Html:", err));
-    renderChartToPdf().catch((err) => console.error("Error generating PDF:", err));
-
-// Generate the PDF
+        console.log("Fichier sélectionné :", filePath);
 
 
+        // Parse the selected file
+        parsedData = await parser.parse(filePath, "./data/questions.json");
+        
+        console.log(parsedData)
+        // dataToParse = await fs.readJSON("./data/questions.json");
+        if (!parsedData) {
+            console.log("No data to analyze. Exiting.");
+            return;
+        }
 
-    // console.log((path.(__dirname, "../data"))) // a faire
-    // console.log((path.join(__dirname, "../data/questions.json").split("\\").reverse())[0] );
+        // Analyze the questions to define an exam profile
+        await analyze(parsedData);
+
+        // Generate a chart specification
+        const spec = {
+            $schema: "https://vega.github.io/schema/vega-lite/v5.json",
+            description: "Question types and their counts",
+            data: { values: prepareProfile(profile) },
+            mark: "bar",
+            encoding: {
+                x: { field: "type", type: "ordinal", title: "Question Type" },
+                y: { field: "count", type: "quantitative", title: "Number of Questions" },
+                color: { field: "type", type: "nominal" },
+            },
+        };
+
+        // Render the chart to both HTML and PDF
+        await renderChartToHtml(spec);
+        console.log("HTML chart generated successfully.");
+
+        await renderChartToPdf(spec);
+        console.log("PDF chart generated successfully.");
+    } catch (error) {
+        console.error("Error in MenuAnalyze:", error);
+    }
 }
+
 // Render the chart to an HTML file
 async function renderChartToHtml(spec) {
     const vegaView = new vega.View(vega.parse(vegalite.compile(spec).spec))
@@ -297,7 +330,7 @@ function prepareProfile(profile) {
 }
 function isQuestionInSet(set, question) {
     return Array.from(set).some(
-        (q) => JSON.stringify(q) === JSON.stringify(question)
+        (q) => JSON.stringify(q.title) === JSON.stringify(question.title)
     );
 }
 function recognizeType(question) {
@@ -317,6 +350,8 @@ function initProfile(){
         numerical: { count: 0, questions: [] },
         short_answer: { count: 0, questions: [] },
         true_false: { count: 0, questions: [] },
+        multiple_choice_feedback: { count: 0, questions: [] },
+        open: { count: 0, questions: [] },
     };
 }
  //SPEC09 : Comparer le profil d'un examen avec le profil moyen d'un ou plusieurs fichiers de la banque de données.

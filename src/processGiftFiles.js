@@ -3,6 +3,7 @@ const path = require("path");
 
 // Charge le GiftParser
 const GiftParser = require("./GiftParser");
+const chalk = require("chalk");
 
 // Initialisation du GiftParser
 const parser = new GiftParser(true); // Paramètre pour afficher le tokenizing
@@ -21,6 +22,7 @@ function getGiftFilePaths(inputPath) {
             return files.map(file => path.resolve(inputPath, file)); // Résolution des chemins absolus
         } else if (stats.isFile() && inputPath.endsWith(".gift")) {
             // Si c'est un fichier unique, retourner un tableau avec ce fichier
+            console.log(chalk.red(`Fichier unique trouvé : ${inputPath}`));
             return [path.resolve(inputPath)];
         } else {
             console.error("Le chemin fourni n'est ni un fichier .gift valide ni un dossier.");
@@ -78,6 +80,7 @@ async function parse(inputPath, outputFile = "./data/questions.json") {
         }
 
         const allQuestions = processGiftFiles(giftFiles);
+        console.log("Toutes les questions ont été traitées.");
 
         if (allQuestions.length === 0) {
             console.log("Aucune question trouvée dans les fichiers GIFT.");
