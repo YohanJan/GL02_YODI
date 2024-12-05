@@ -1,0 +1,9 @@
+:: Addition simple :: Quel est le résultat de 2 + 2 ? { ~3 ~=4 ~5}
+:: Forme de la Terre :: La Terre est plate.{FALSE}
+:: Couleur du ciel :: Quelle est la couleur du ciel ? {=bleu =azur}
+:: Capitales des pays :: Associez les pays avec leurs capitales. {=France -> Paris =Allemagne -> Berlin =Espagne -> Madrid }
+:: Trouver la capitale :: La capitale de l'Italie est {=Rome} et c'est situe en {=Europe}.
+:: Trouver la capitale :: La capitale du Japon est {=Tokyo} et c'est situe en {=Asie}.
+:: Valeur de π :: Quelle est la valeur approximative de π ? {#=3.14:0.01}
+:: Langage populaire :: Quel langage est utilisé principalement pour le développement web ? {~Java #Pas tout à fait, essayez encore. ~=JavaScript #Correct, c'est la bonne réponse ! ~Python #Non, ce n'est pas spécifique au web.}
+:: Seconde Guerre mondiale :: Racontez quels évènements ont provoqué la seconde guerre mondiale? {}

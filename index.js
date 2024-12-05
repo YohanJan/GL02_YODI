@@ -20,6 +20,7 @@ async function mainMenu() {
                 "Générer une VCard",
                 "Simuler un examen",
                 "Definir un profil d' examen",
+                "Definir un parser",
                 "Quitter",
             ],
         },
@@ -44,6 +45,10 @@ async function mainMenu() {
         case "Definir un profil d' examen":
             await examManager.MenuAnalyze();
             break;
+        case "Definir un parser":
+           await parser.parse("./data/exam - 2024-12-04T17-10-04-233Z.gift","./data/questions.json");
+            break;
+            
         case "Quitter":
             console.log(chalk.green("Au revoir !"));
             process.exit(0);
