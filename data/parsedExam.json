@@ -1,0 +1,217 @@
+[
+  {
+    "type": "multiple_choice",
+    "title": "Addition simple",
+    "question": "Quel est le résultat de 2 + 2 ? (1) (1)",
+    "options": [
+      {
+        "text": "3",
+        "is_correct": false
+      },
+      {
+        "text": "4",
+        "is_correct": true
+      },
+      {
+        "text": "5",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "type": "multiple_choice",
+    "title": "EM U4 p32 Review 1 MultiChoice",
+    "question": "Read the text below and decide which answer best fits each gap. There is an example at the beginning.\nThe science of happiness\nSome scientisis believe that asking people how happy they are is (1) asking them about an event they've attended in the past — there’s a lot they (2) no notice of during the experience,so how do they know? These scientists think that anyone studying happiness should pay more (3) to people’s experiences at the time they occur, not afterwards.\nOther scientists say that we are actually (4) up of our memories. They suggest that studying moment-to-moment experiences at the time (5) too much emphasis on temporary pleasures, and that happiness goes (6) than that. They identify three key (7) for happiness: pleasure, engagement (how involved we are with family, work, romance and hobbies) and meaning (how we use our personal strengths to achieve important (8). It is interesting that, (9) to what might be expected, pleasure seems to play the smallest part in what makes us happy. (1) (1)",
+    "options": [
+      {
+        "text": "similar to",
+        "is_correct": true
+      },
+      {
+        "text": "close to",
+        "is_correct": false
+      },
+      {
+        "text": "Typical of",
+        "is_correct": false
+      },
+      {
+        "text": "consist of",
+        "is_correct": false
+      },
+      {
+        "text": "gave",
+        "is_correct": false
+      },
+      {
+        "text": "took",
+        "is_correct": true
+      },
+      {
+        "text": "got",
+        "is_correct": false
+      },
+      {
+        "text": "kept",
+        "is_correct": false
+      },
+      {
+        "text": "focus",
+        "is_correct": false
+      },
+      {
+        "text": "concentration",
+        "is_correct": false
+      },
+      {
+        "text": "attention",
+        "is_correct": true
+      },
+      {
+        "text": "regard",
+        "is_correct": false
+      },
+      {
+        "text": "made",
+        "is_correct": true
+      },
+      {
+        "text": "built",
+        "is_correct": false
+      },
+      {
+        "text": "created",
+        "is_correct": false
+      },
+      {
+        "text": "developed",
+        "is_correct": false
+      },
+      {
+        "text": "sets",
+        "is_correct": false
+      },
+      {
+        "text": "puts",
+        "is_correct": true
+      },
+      {
+        "text": "fixes",
+        "is_correct": false
+      },
+      {
+        "text": "rests",
+        "is_correct": false
+      },
+      {
+        "text": "stronger",
+        "is_correct": false
+      },
+      {
+        "text": "lower",
+        "is_correct": false
+      },
+      {
+        "text": "deeper",
+        "is_correct": true
+      },
+      {
+        "text": "greater",
+        "is_correct": false
+      },
+      {
+        "text": "ingredients",
+        "is_correct": true
+      },
+      {
+        "text": "parts",
+        "is_correct": false
+      },
+      {
+        "text": "factors",
+        "is_correct": false
+      },
+      {
+        "text": "items",
+        "is_correct": false
+      },
+      {
+        "text": "intentions",
+        "is_correct": false
+      },
+      {
+        "text": "plans",
+        "is_correct": false
+      },
+      {
+        "text": "marks",
+        "is_correct": false
+      },
+      {
+        "text": "goals",
+        "is_correct": true
+      },
+      {
+        "text": "against",
+        "is_correct": false
+      },
+      {
+        "text": "opposing",
+        "is_correct": false
+      },
+      {
+        "text": "contrary",
+        "is_correct": true
+      },
+      {
+        "text": "contrast",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "type": "multiple_choice",
+    "title": "EM U5 p34 Gra1.1",
+    "question": "\nChoose the correct words in italics to complete the sentences.\nWould you like (1) rice with your chicken? (1)",
+    "options": [
+      {
+        "text": "some",
+        "is_correct": true
+      },
+      {
+        "text": "a few",
+        "is_correct": false
+      }
+    ]
+  },
+  {
+    "type": "multiple_choice",
+    "title": "EM U5 p34 Gra1.2",
+    "question": "\nChoose the correct words in italics to complete the sentences.\nI mustn't eat too (1) chocolate — it's bad for me! (1)",
+    "options": [
+      {
+        "text": "many",
+        "is_correct": false
+      },
+      {
+        "text": "much",
+        "is_correct": true
+      }
+    ]
+  },
+  {
+    "type": "multiple_choice",
+    "title": "EM U5 p34 Gra1.3",
+    "question": "\nChoose the correct words in italics to complete the sentences.\nPeople who eat too (1) salt can suffer from high blood pressure (1)",
+    "options": [
+      {
+        "text": "much",
+        "is_correct": true
+      },
+      {
+        "text": "many",
+        "is_correct": false
+      }
+    ]
+  }
+]

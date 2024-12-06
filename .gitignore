@@ -49,4 +49,5 @@ temp/
 
 data/exam*
 data/Vcard*
-chart.html
+data/chart*
+/chart.html
