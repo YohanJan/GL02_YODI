@@ -1,9 +1,0 @@
-::Addition simple:: Quel est le résultat de 2 + 2 ? (1) (1) { ~3 =4 ~5 }
-
-::Couleur du ciel:: Quelle est la couleur du ciel ? (1) (1) { =bleu =azur }
-
-::Trouver la capitale:: La capitale de l'Italie est {=Rome} et c'est situe en {=Europe}.
-
-::Capitales des pays:: Associez les pays avec leurs capitales. (1) (1) { =France -> Paris =Allemagne -> Berlin =Espagne -> Madrid }
-
-::Forme de la Terre:: La Terre est plate.(1) (1) {  }

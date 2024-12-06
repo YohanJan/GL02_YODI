@@ -1,240 +1,86 @@
 [
   {
     "type": "multiple_choice",
-    "title": "EM U5 p37 Reading 2.4",
-    "question": "\nRead the text again. For each question, choose the answer which you think fits best according to the text.\n~She finds them suprising\n=She accepts them reluctantly\n~She doesn´t believe all of them\n~She thinks they are exaggerated }\nWhat does the phrase' got the hang of hang of it' in line 40 mean? (1)\n~She started to do more exercise\n~She gained a feeling of extra energy\n~She wanted to give up her experiment\n=She found what she ate more enjoyable  } (1)",
+    "title": "Addition simple",
+    "question": "Quel est le résultat de 2 + 2 ? (1) (1)",
     "options": [
       {
-        "text": "Was preparing to do something",
+        "text": "3",
         "is_correct": false
       },
       {
-        "text": "Learnt how to do something",
+        "text": "4",
         "is_correct": true
       },
       {
-        "text": "Got tired of doing something",
-        "is_correct": false
-      },
-      {
-        "text": "Realised she liked doin something",
-        "is_correct": false
-      }
-    ]
-  },
-  {
-    "type": "multiple_choice",
-    "title": "EM U5 p34 Gra2.4",
-    "question": "\nComplete sentences with _few_, _a few_, _little_ or _a little_.\nI've got (1) free time this week so I can do the work if you like. (1)",
-    "options": [
-      {
-        "text": "few",
-        "is_correct": false
-      },
-      {
-        "text": "a few",
-        "is_correct": false
-      },
-      {
-        "text": "little",
-        "is_correct": false
-      },
-      {
-        "text": "a little",
-        "is_correct": true
-      }
-    ]
-  },
-  {
-    "type": "short_answer",
-    "title": "EM U5 p38 Gra3.1 passive",
-    "question": "\nComplete the second sentence so that it has a similar meaning to the first sentence, using the word given. Do not change the word given. You must use between two and five words, including the word given.\nThe chef gave him the recipe.\n(WAS)\nHe (1) the chef. (1)",
-    "correct_answers": [
-      "was given the recipe by"
-    ]
-  },
-  {
-    "type": "short_answer",
-    "title": "U1 p10 GR2.7 Present tenses & habits",
-    "question": "\nComplete the sentences with the correct present form of the verb in brackets.\nColin (1) used to walking to school – he's always done it. (be) (1)",
-    "correct_answers": [
-      "is"
-    ]
-  },
-  {
-    "type": "short_answer",
-    "title": "U1 p10 GR2.6 Present tenses & habits",
-    "question": "\nComplete the sentences with the correct present form of the verb in brackets.\nEven when I have a bad headache I (1) painkillers. (not take) (1)",
-    "correct_answers": [
-      "don't take",
-      "do not take"
-    ]
-  },
-  {
-    "type": "short_answer",
-    "title": "U1 p10 GR2.2 Present tenses & habits",
-    "question": "\nComplete the sentences with the correct present form of the verb in brackets.\nThe children (1) very quickly. (grow up) (1)",
-    "correct_answers": [
-      "are growing up"
-    ]
-  },
-  {
-    "type": "multiple_choice",
-    "title": "EM U5 p34 Gra2.2",
-    "question": "\nComplete sentences with _few_, _a few_, _little_ or _a little_.\n(1) of us are going to have a barbecue in the garden tonight. Do you fancy coming? (1)",
-    "options": [
-      {
-        "text": "Few",
-        "is_correct": false
-      },
-      {
-        "text": "A few",
-        "is_correct": true
-      },
-      {
-        "text": "Little",
-        "is_correct": false
-      },
-      {
-        "text": "A little",
+        "text": "5",
         "is_correct": false
       }
     ]
   },
   {
     "type": "short_answer",
-    "title": "U11 p114 Mixed conditionals 4.1",
-    "question": "\nComplete the sentences using the correct form of the verbs in brackets. (If there is more than one possibly, say why.)\nIf I'd left the party earlier, I (1) (not/feel) so tired today. (1)",
+    "title": "Couleur du ciel",
+    "question": "Quelle est la couleur du ciel ? (1) (1)",
     "correct_answers": [
-      "wouldn't feel",
-      "wouldn't be feeling",
-      "wouldn't have felt",
-      "wouldn’t feel",
-      "wouldn’t be feeling",
-      "wouldn’t have felt",
-      "would not feel",
-      "would not be feeling",
-      "would not have felt"
+      "bleu",
+      "azur"
     ]
+  },
+  {
+    "type": "matching",
+    "title": "Capitales des pays",
+    "question": "Associez les pays avec leurs capitales. (1) (1)",
+    "pairs": [
+      {
+        "term": "France",
+        "match": "Paris"
+      },
+      {
+        "term": "Allemagne",
+        "match": "Berlin"
+      },
+      {
+        "term": "Espagne",
+        "match": "Madrid"
+      }
+    ]
+  },
+  {
+    "type": "numerical",
+    "title": "Valeur de π",
+    "question": "Quelle est la valeur approximative de π ? (1) (1)",
+    "correct_answer": 3.14,
+    "tolerance": 0.01
+  },
+  {
+    "type": "cloze",
+    "title": "Trouver la capitale",
+    "question": "La capitale du Japon est (1) et c'est situe en (2).",
+    "answers": [
+      "Tokyo",
+      "Asie"
+    ]
+  },
+  {
+    "type": "numerical",
+    "title": "EM U42 Ultimate q4",
+    "question": "When was Ulysses S. Grant born? (1) (1) (1)",
+    "correct_answer": 1822,
+    "tolerance": 0
   },
   {
     "type": "short_answer",
-    "title": "EM U5 p38 Gra3.3 passive",
-    "question": "\nComplete the second sentence so that it has a similar meaning to the first sentence, using the word given. Do not change the word given. You must use between two and five words, including the word given.\nMary baked the cake using six eggs.\n(BAKED)\nThe cake (1) who used six eggs. (1)",
+    "title": "EM U4 p33 Review 4.1 more irritating than",
+    "question": "\nComplete the second sentence so that it has a similar meaning to the first sentence, using the word given. Do not change the word given. You must use between two and five words, including the word given. Here is an example:\nPlease don’t drive so fast — this is a dangerous road.\nMORE\nPlease drive more slowly — this is a dangerous road.\nNothing irritates me more than getting hundreds of spam emails.\nMORE\nThere is nothing (1) getting hundreds of spam emails. (1)",
     "correct_answers": [
-      "was baked by Mary"
-    ]
-  },
-  {
-    "type": "short_answer",
-    "title": "EM U5 p38 Gra3.5 passive",
-    "question": "\nComplete the second sentence so that it has a similar meaning to the first sentence, using the word given. Do not change the word given. You must use between two and five words, including the word given.\nPlease check that someone has washed up before you leave!\n(DONE)\nPlease check that the (1) before Rafa joined him as his business partner. (1)",
-    "correct_answers": [
-      "washing-up has been done",
-      "washing up has been done"
-    ]
-  },
-  {
-    "type": "multiple_choice",
-    "title": "U3 p32 CD.24 Present perfect vs past simple",
-    "question": "Barney _____ a shower already, he's nearly ready to go.(1) (1)",
-    "options": [
-      {
-        "text": "'s taken",
-        "is_correct": true
-      },
-      {
-        "text": "took",
-        "is_correct": false
-      }
-    ]
-  },
-  {
-    "type": "open",
-    "title": "Seconde Guerre mondiale",
-    "question": "Racontez quels évènements ont provoqué la seconde guerre mondiale? (1) (1)"
-  },
-  {
-    "type": "multiple_choice",
-    "title": "EM U5 p38 Gra2 passive forms",
-    "question": "Complete the email with the correct active or passive form of the verbs in brackets.\nDear Julia,\nYou'll never gess what (1) (happen)! Our lovey new car (2) (steal)!\nOne day last week Jack went out to be yhe beach for a swim and as usual he (3) (hide) the car keys in the toe of his shoe. When he came out of the water, he (4) (not notice) anything suspicious. It didn't look as if his clothes (5) (touch). When he started to put them on, however, he realised that the keys (6) (take) and when he got to the car park, of course, the car was gone too.\nThe police say there is a gang of car thieves who (7) (know) to be operating in the area. They think Jack (8) (watch) as he arrived at the beach. The thieves saw where he had parked the car and then where the keys (9) (hide).\nIt was almost two weeks ago now and although we hope it (10) (find), we're beginning to think we might never see it again.\nWell, that's all from me. Write soon and tell me all your news.\nLove,\nRaquel",
-    "options": [
-      {
-        "text": "has happened",
-        "is_correct": true
-      },
-      {
-        "text": "has been stolen",
-        "is_correct": true
-      },
-      {
-        "text": "hid",
-        "is_correct": true
-      },
-      {
-        "text": "didn't notice",
-        "is_correct": true
-      },
-      {
-        "text": "had been touched",
-        "is_correct": true
-      },
-      {
-        "text": "had been taken",
-        "is_correct": true
-      },
-      {
-        "text": "are known",
-        "is_correct": true
-      },
-      {
-        "text": "was being watched",
-        "is_correct": true
-      },
-      {
-        "text": "were hidden",
-        "is_correct": true
-      },
-      {
-        "text": "will be found",
-        "is_correct": true
-      }
-    ]
-  },
-  {
-    "type": "multiple_choice",
-    "title": "U3 p32 CD.18 Present perfect vs past simple",
-    "question": "I _____ to Disneyland three times.(1) (1)",
-    "options": [
-      {
-        "text": "'ve been",
-        "is_correct": true
-      },
-      {
-        "text": "went",
-        "is_correct": false
-      }
-    ]
-  },
-  {
-    "type": "multiple_choice",
-    "title": "U5 p50 2.1",
-    "question": "\nRead the text above and choose the correct option.\nThe writer (1) like chilli. (1)",
-    "options": [
-      {
-        "text": "likes",
-        "is_correct": false
-      },
-      {
-        "text": "doesn’t",
-        "is_correct": true
-      }
+      "more irritating than"
     ]
   },
   {
     "type": "multiple_choice",
     "title": "EM U4 p32 Review 1 MultiChoice",
-    "question": "Read the text below and decide which answer best fits each gap. There is an example at the beginning.\nThe science of happiness\nSome scientisis believe that asking people how happy they are is (1) asking them about an event they've attended in the past — there’s a lot they (2) no notice of during the experience,so how do they know? These scientists think that anyone studying happiness should pay more (3) to people’s experiences at the time they occur, not afterwards.\nOther scientists say that we are actually (4) up of our memories. They suggest that studying moment-to-moment experiences at the time (5) too much emphasis on temporary pleasures, and that happiness goes (6) than that. They identify three key (7) for happiness: pleasure, engagement (how involved we are with family, work, romance and hobbies) and meaning (how we use our personal strengths to achieve important (8). It is interesting that, (9) to what might be expected, pleasure seems to play the smallest part in what makes us happy. (1) (1)",
+    "question": "Read the text below and decide which answer best fits each gap. There is an example at the beginning.\nThe science of happiness\nSome scientisis believe that asking people how happy they are is (1) asking them about an event they've attended in the past — there’s a lot they (2) no notice of during the experience,so how do they know? These scientists think that anyone studying happiness should pay more (3) to people’s experiences at the time they occur, not afterwards.\nOther scientists say that we are actually (4) up of our memories. They suggest that studying moment-to-moment experiences at the time (5) too much emphasis on temporary pleasures, and that happiness goes (6) than that. They identify three key (7) for happiness: pleasure, engagement (how involved we are with family, work, romance and hobbies) and meaning (how we use our personal strengths to achieve important (8). It is interesting that, (9) to what might be expected, pleasure seems to play the smallest part in what makes us happy. (1)",
     "options": [
       {
         "text": "similar to",
@@ -383,10 +229,95 @@
     ]
   },
   {
-    "type": "numerical",
-    "title": "EM U42 Ultimate q4",
-    "question": "When was Ulysses S. Grant born? (1) (1)",
-    "correct_answer": 1822,
-    "tolerance": 0
+    "type": "multiple_choice_feedback",
+    "title": "EM U42 Ultimate q1",
+    "question": "What's the answer to this multiple-choice question? (1) (1) (1)",
+    "options": [
+      {
+        "text": "wrong answer",
+        "is_correct": false,
+        "feedback": "comment on the wrong answer"
+      },
+      {
+        "text": "another wrong answer",
+        "is_correct": false,
+        "feedback": "comment on this wrong answer"
+      },
+      {
+        "text": "right answer",
+        "is_correct": true,
+        "feedback": "Very good!"
+      }
+    ]
+  },
+  {
+    "type": "short_answer",
+    "title": "EM U4 p33 Review 4.4 worried by",
+    "question": "\nComplete the second sentence so that it has a similar meaning to the first sentence, using the word given. Do not change the word given. You must use between two and five words, including the word given. Here is an example:\nPlease don’t drive so fast — this is a dangerous road.\nMORE\nPlease drive more slowly — this is a dangerous road.\nI find it very worrying if things go wrong on holiday.\nGET\nI (1) things going wrong on holiday. (1)",
+    "correct_answers": [
+      "get very worried about",
+      "get very worried by"
+    ]
+  },
+  {
+    "type": "short_answer",
+    "title": "EM U4 p33 Review 4.6 for the first time",
+    "question": "\nComplete the second sentence so that it has a similar meaning to the first sentence, using the word given. Do not change the word given. You must use between two and five words, including the word given. Here is an example:\nPlease don’t drive so fast — this is a dangerous road.\nMORE\nPlease drive more slowly — this is a dangerous road.\nI had never seen a glacier before I went to Norway\nI\nWhen I was in Norway, (1) the first time. (1)",
+    "correct_answers": [
+      "I saw a glacier for"
+    ]
+  },
+  {
+    "type": "short_answer",
+    "title": "EM U4 p33 Review 4.2 interesting for/to",
+    "question": "\nComplete the second sentence so that it has a similar meaning to the first sentence, using the word given. Do not change the word given. You must use between two and five words, including the word given. Here is an example:\nPlease don’t drive so fast — this is a dangerous road.\nMORE\nPlease drive more slowly — this is a dangerous road.\nI'm very interesled in learning about the culture of other countries\nIS\nLearning about the culture of other countries (1) me. (1)",
+    "correct_answers": [
+      "is very interesting for",
+      "is very interesting to"
+    ]
+  },
+  {
+    "type": "short_answer",
+    "title": "EM U42 Ultimate q3",
+    "question": "42 is the Absolute Answer to everything.(1) (1)",
+    "correct_answers": []
+  },
+  {
+    "type": "multiple_choice",
+    "title": "EM U5 p34 Gra1.2",
+    "question": "\nChoose the correct words in italics to complete the sentences.\nI mustn't eat too (1) chocolate — it's bad for me! (1)",
+    "options": [
+      {
+        "text": "many",
+        "is_correct": false
+      },
+      {
+        "text": "much",
+        "is_correct": true
+      }
+    ]
+  },
+  {
+    "type": "multiple_choice",
+    "title": "EM U5 p34 Gra2.5",
+    "question": "\nComplete sentences with _few_, _a few_, _little_ or _a little_.\nI've eaten so many already that there are only (1) chocolates left! (1)",
+    "options": [
+      {
+        "text": "few",
+        "is_correct": false
+      },
+      {
+        "text": "a few",
+        "is_correct": true
+      },
+      {
+        "text": "little",
+        "is_correct": false
+      },
+      {
+        "text": "a little",
+        "is_correct": false
+      }
+    ]
   }
 ]
