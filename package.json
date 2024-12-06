@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "testP": "mocha"
   },
   "keywords": [],
   "author": "",
@@ -22,5 +23,9 @@
     "vega": "^5.30.0",
     "vega-cli": "^5.30.0",
     "vega-lite": "^5.21.0"
+  },
+  "devDependencies": {
+    "chai": "^5.1.2",
+    "mocha": "^11.0.1"
   }
 }
