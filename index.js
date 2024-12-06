@@ -52,7 +52,7 @@ async function mainMenu() {
             break;
 
         case "Spec09":
-            await examManager.compareExamProfile();
+            await examManager.comparaisonProfileMoyen("./data");
             break;
 
         case "Quitter":

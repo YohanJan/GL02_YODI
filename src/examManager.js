@@ -1,7 +1,7 @@
 // Importer les modules
 const path = require("path");
 const fs = require("fs-extra");
-const chalk = require("chalk");
+const chalk = require('chalk');
 const inquirer = require("inquirer");
 const vega = require('vega');
 const vegalite = require('vega-lite');
@@ -15,7 +15,9 @@ const limit = [3, 5]
 const questionsPath = path.join(__dirname, "../data/questions.json");
 // Dossier contenant les fichiers d'examen
 const examsPath = path.join(__dirname, '../data');
-profile = {}
+// Variables globales pour stocker les profils
+let averageProfileData;
+let examProfile;
 
 async function researchQuestions(questions, keyword, categorie) {
     console.log("Recherche de questions...");
@@ -382,106 +384,84 @@ async function simulateExam() {
     console.log(`Examen terminé ! Votre score : ${score}/${questions.length}`);
     rl.close();
 }
+// Initialisation du profil d'examen
+function initProfile() {
+    profile = {
+        cloze: { count: 0, questions: [] },
+        matching: { count: 0, questions: [] },
+        multiple_choice: { count: 0, questions: [] },
+        numerical: { count: 0, questions: [] },
+        short_answer: { count: 0, questions: [] },
+        true_false: { count: 0, questions: [] },
+        multiple_choice_feedback: { count: 0, questions: [] },
+        open: { count: 0, questions: [] },
+    };
+}
+// Reconnaissance et mise à jour du type de question
+function recognizeType(question) {
+    const questionTitle = question.title; // Titre de la question
+    if (profile[question.type]) {
+        profile[question.type].questions.push(questionTitle); // Ajoute la question au type
+        profile[question.type].count++; // Incrémente le compteur pour ce type
+    } else {
+        console.log(chalk.red(`Type de question inconnu : ${question.type}`));
+    }
+}
+// Analyse du fichier pour définir le profil
+async function analyzeFile(filePath, outputPath) {
+    console.log(`Analyse du fichier : ${filePath}`);
+    console.log(`Chemin d'entrée : ${filePath}`);
+    console.log(`Chemin de sortie : ${outputPath}`);
 
-async function analyze(toAnalyze) {
     try {
+        // Réinitialiser le profil avant analyse
+        initProfile();
 
-        if (toAnalyze.length === 0) {
-            console.log(chalk.red("La banque de questions est vide."));
+        // Parser le fichier
+        const parsedData = await parser.parse(filePath, outputPath);
+        if (!parsedData) {
+            console.log(chalk.red("Le fichier n'a pas pu être parsé ou est vide."));
             return null;
         }
 
-        // Analyser les questions pour définir un profil d'examen
-        toAnalyze.forEach(recognizeType)
-        console.log(chalk.green("Profil d'examen défini avec succès."));
-        // console.log(chalk.bgCyan(JSON.stringify(profile, null, 2)));
-    } catch (error) {
-        console.error(chalk.red("Erreur lors du chargement des questions :"), error);
-    }
-
-    
-}
-async function MenuAnalyze() {
-    const directoryPath = path.resolve("./data"); // Utilisation du chemin absolu
-    const parsedExamPath = path.resolve("./data/parsedExam.json"); // Fichier de sortie pour les données parsées
-    let parsedData = null;
-    let analyzedData = null;
-
-    // Réinitialiser le profil avant chaque analyse
-    initProfile();
-
-    try {
-        // Sélectionner un fichier spécifique
-        const filePath = await selectFile(directoryPath, 'gift');
+        console.log(`Questions trouvées dans ${filePath} : ${parsedData.length}`);
         
-        // Vérifier si un fichier est sélectionné
-        if (!filePath) {
-            console.log("Aucun fichier sélectionné. Sortie.");
-            return;
-        }
+        // Analyser les questions
+        parsedData.forEach(recognizeType);
 
-        console.log("Fichier sélectionné :", filePath);
+        // Écrire les données parsées dans le fichier
+        fs.writeFileSync(outputPath, JSON.stringify(parsedData, null, 2), "utf8");
+        console.log(`Toutes les questions ont été écrites dans ${outputPath}`);
+        console.log(chalk.green("Données parsées avec succès."));
 
-        // Vérifier si le chemin sélectionné est un fichier valide
-        if (!fs.existsSync(filePath)) {
-            console.error("Le fichier sélectionné n'existe pas.");
-            return;
-        }
+        // Afficher les résultats par type
+        console.log(chalk.cyan("Profil d'examen :"));
+        const profileData = prepareProfile(profile);
+        console.log(profileData);
 
-        const stats = fs.statSync(filePath);
-        if (!stats.isFile() || !filePath.endsWith(".gift")) {
-            console.error("Le fichier sélectionné n'est pas un fichier .gift valide.");
-            return;
-        }
-
-        // Parser le fichier sélectionné
-        parsedData = await parser.parse(filePath, parsedExamPath);
-        if (!parsedData) {
-            console.log("Aucune donnée à analyser. Sortie.");
-            return;
-        }
-
-        // Écrire les données parsées dans parsedExam.json
-        fs.writeFileSync(parsedExamPath, JSON.stringify(parsedData, null, 2), "utf8");
-        console.log(`Données parsées écrites avec succès dans ${parsedExamPath}.`);
-
-        // Analyser les questions pour définir un profil d'examen
-        analyzedData = await analyze(parsedData);
-
-        // Générer la spécification du graphique
-        const spec = {
-            $schema: "https://vega.github.io/schema/vega-lite/v5.json",
-            description: "Types de questions et leur nombre",
-            data: { values: prepareProfile(profile) },
-            mark: "bar",
-            encoding: {
-                x: { field: "type", type: "ordinal", title: "Type de question" },
-                y: { field: "count", type: "quantitative", title: "Nombre de questions" },
-                color: { field: "type", type: "nominal" },
-            },
-        };
-
-        console.log(prepareProfile(profile));
-
-        // Rendre le graphique en HTML et PDF
-        await renderChartToHtml(spec);
-        console.log("Graphique HTML généré avec succès.");
-
-        await renderChartToPdf(spec);
-        console.log("Graphique PDF généré avec succès.");
+        // Retourner le profil pour d'autres usages
+        return profile;
     } catch (error) {
-        console.error("Erreur dans MenuAnalyze :", error);
+        console.error(chalk.red("Erreur lors de l'analyse du fichier :"), error);
+        return null;
     }
 }
-
-// Render the chart to an HTML file
+// Préparation des données du profil pour Vega-Lite
+function prepareProfile(profile) {
+    const data = [];
+    for (const [type, { count }] of Object.entries(profile)) {
+        data.push({ type, count });
+    }
+    return data;
+}
+// Génération et sauvegarde du graphique en HTML
 async function renderChartToHtml(spec) {
     const vegaView = new vega.View(vega.parse(vegalite.compile(spec).spec))
         .renderer('none')
         .initialize();
-    const svg = await vegaView.toSVG(); // Generate SVG from the chart
+    const svg = await vegaView.toSVG(); // Génération SVG à partir du graphique
 
-    // Save SVG to a temporary HTML file
+    // Sauvegarde du SVG dans un fichier HTML temporaire
     const htmlContent = `
         <!DOCTYPE html>
         <html lang="en">
@@ -491,24 +471,23 @@ async function renderChartToHtml(spec) {
     `;
     const htmlPath = './chart.html';
     await fs.writeFile(htmlPath, htmlContent, 'utf8');
-
-
+    console.log("Graphique HTML généré avec succès :", htmlPath);
 }
-// Render the chart to a PDF file
+// Génération et sauvegarde du graphique en PDF
 async function renderChartToPdf() {
-        // Step 4: Convert the HTML to a PDF using Puppeteer
-        const browser = await puppeteer.launch();
-        const page = await browser.newPage();
-        await page.goto(`file://${process.cwd()}/chart.html`, { waitUntil: 'load' });
-        await page.pdf({
-            path: './data/chart '+ new Date().toISOString().replace(/[:.]/g, "-") +'.pdf',
-            format: 'A4',
-            printBackground: true,
-        });
-        await browser.close();
-    
-        console.log("PDF generated: chart.pdf");
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+    await page.goto(`file://${process.cwd()}/chart.html`, { waitUntil: 'load' });
+    const pdfPath = `./data/chart-${new Date().toISOString().replace(/[:.]/g, "-")}.pdf`;
+    await page.pdf({
+        path: pdfPath,
+        format: 'A4',
+        printBackground: true,
+    });
+    await browser.close();
+    console.log("Graphique PDF généré avec succès :", pdfPath);
 }
+// Sélection d'un fichier pour analyse
 async function selectFile(directory) {
     try {
         // Lister les fichiers dans le répertoire
@@ -546,7 +525,57 @@ async function selectFile(directory) {
         console.error("Erreur lors de la lecture du répertoire :", error);
     }
 }
+// Menu principal pour l'analyse
+async function MenuAnalyze() {
+    const directoryPath = path.resolve("./data"); // Chemin des fichiers à analyser
+    const parsedExamPath = path.resolve("./data/parsedExam.json"); // Fichier de sortie pour les données parsées
 
+    try {
+        // Sélectionner un fichier spécifique
+        const filePath = await selectFile(directoryPath);
+
+        // Vérifier si un fichier est sélectionné
+        if (!filePath) {
+            console.log("Aucun fichier sélectionné. Sortie.");
+            return;
+        }
+
+        console.log("Fichier sélectionné :", filePath);
+
+        // Vérifier si le chemin sélectionné est un fichier valide
+        const stats = await fs.stat(filePath);
+        if (!stats.isFile() || !filePath.endsWith(".gift")) {
+            console.error("Le fichier sélectionné n'est pas un fichier .gift valide.");
+            return;
+        }
+
+        // Analyse du fichier
+        const analyzedProfile = await analyzeFile(filePath, parsedExamPath);
+        if (!analyzedProfile) {
+            console.log("Aucune donnée à analyser. Sortie.");
+            return;
+        }
+
+        // Générer la spécification du graphique
+        const spec = {
+            $schema: "https://vega.github.io/schema/vega-lite/v5.json",
+            description: "Types de questions et leur nombre",
+            data: { values: prepareProfile(profile) },
+            mark: "bar",
+            encoding: {
+                x: { field: "type", type: "ordinal", title: "Type de question" },
+                y: { field: "count", type: "quantitative", title: "Nombre de questions" },
+                color: { field: "type", type: "nominal" },
+            },
+        };
+
+        // Générer et sauvegarder les graphiques
+        await renderChartToHtml(spec);
+        await renderChartToPdf();
+    } catch (error) {
+        console.error("Erreur dans MenuAnalyze :", error);
+    }
+}
 //prepare profile for vegalite
 function prepareProfile(profile) {
     const data = [];
@@ -560,178 +589,275 @@ function isQuestionInSet(set, question) {
         (q) => JSON.stringify(q.title) === JSON.stringify(question.title)
     );
 }
-function recognizeType(question) {
-    const toAdd = question.title;
-    if (profile[question.type]) {
-        profile[question.type].questions.push(toAdd); // Ajoute la question
-        profile[question.type].count++; // Incrémente le compteur
-    } else {
-        console.log(chalk.red(`Type de question inconnu : ${question.type}`));
-    }
-}
-function initProfile(){
-    profile = {
-        cloze: { count: 0, questions: [] },
-        matching: { count: 0, questions: [] },
-        multiple_choice: { count: 0, questions: [] },
-        numerical: { count: 0, questions: [] },
-        short_answer: { count: 0, questions: [] },
-        true_false: { count: 0, questions: [] },
-        multiple_choice_feedback: { count: 0, questions: [] },
-        open: { count: 0, questions: [] },
-    };
-}
-// Fonction pour réinitialiser les variables de stockage
-function initializeProfileData() {
-    return {
-        cloze: { count: 0 },
-        matching: { count: 0 },
-        multiple_choice: { count: 0 },
-        numerical: { count: 0 },
-        short_answer: { count: 0 },
-        true_false: { count: 0 },
-        multiple_choice_feedback: { count: 0 },
-        open: { count: 0 }
-    };
-}
-
-// Fonction pour analyser un fichier d'examen et mettre à jour le profil accumulé
-async function analyzeExamFile(filePath, profileData) {
-    console.log(chalk.green(`Traitement du fichier : ${filePath}`));
-
-    const parsedExamPath = path.resolve("./data/parsedExam.json"); // Chemin de sortie pour les données parsées
-    const parsedData = await parser.parse(filePath, parsedExamPath);
-    if (!parsedData) {
-        console.log(chalk.red(`Erreur lors du parsing du fichier : ${filePath}`));
-        return null;
-    }
-
-    // Écrire les données parsées dans parsedExam.json
-    fs.writeFileSync(parsedExamPath, JSON.stringify(parsedData, null, 2), "utf8");
-    console.log(`Données parsées écrites avec succès dans ${parsedExamPath}.`);
-
-    // Analyser les questions pour définir le profil d'examen
-    await analyze(parsedData);
-
-    // Mettre à jour le profil accumulé
-    for (const [type, data] of Object.entries(profile)) {
-        if (profileData[type]) {
-            profileData[type].count += data.count;
-        }
-    }
-
-    return profileData;
-}
-
-// Fonction pour calculer le profil moyen à partir des données collectées
-function calculateAverageProfile(profileData, numExams) {
-    const averageProfile = {};
-    for (const [type, data] of Object.entries(profileData)) {
-        averageProfile[type] = { count: Math.round(data.count / numExams) };
-    }
-    return averageProfile;
-}
-
-// Fonction principale pour comparer le profil moyen à un examen spécifique
-async function compareExamProfile() {
-    console.log(chalk.blue("=== Comparaison d'un examen avec le profil moyen des examens ==="));
-
-    const directoryPath = path.resolve("./data");
-    const examFiles = fs.readdirSync(directoryPath).filter(file => file.startsWith("exam") && file.endsWith(".gift"));
-
-    if (examFiles.length === 0) {
-        console.log(chalk.red("Aucun fichier d'examen trouvé dans le dossier ./data."));
-        return;
-    }
-
-    console.log(chalk.green(`Fichiers d'examen détectés : ${examFiles.join(", ")}`));
-
-    let profileData = initializeProfileData();
-    let numExams = 0;
+async function averageProfile(directoryPath) {
+    console.log(chalk.cyan("Démarrage de l'analyse pour le profil moyen des examens..."));
 
     try {
-        // Partie 1 : Analyse de tous les fichiers d'examen pour calculer le profil moyen
-        for (const file of examFiles) {
-            const filePath = path.join(directoryPath, file);
-            profileData = await analyzeExamFile(filePath, profileData);
-            if (profileData) {
-                numExams++;
+        // Lister les fichiers .gift commençant par "exam"
+        const files = await listFiles(directoryPath, '.gift', 'exam');
+        if (files.length === 0) {
+            console.log(chalk.red("Aucun fichier 'exam*.gift' trouvé dans le répertoire."));
+            return null;
+        }
+
+        console.log(chalk.green(`Fichiers trouvés : ${files.length}`));
+
+        // Initialiser les accumulateurs pour chaque type
+        const aggregateProfile = initProfileAccumulators();
+
+        let fileCount = 0;
+
+        // Analyser chaque fichier
+        for (const file of files) {
+            console.log(chalk.cyan(`Analyse du fichier : ${file}`));
+
+            // Utilisation constante de "./data/parsedExam.json" comme fichier de sortie parsé
+            const parsedOutputPath = path.resolve("./data/parsedExam.json");
+            const profile = await analyzeFile(file, parsedOutputPath);
+
+            if (profile) {
+                accumulateProfile(aggregateProfile, profile);
+                fileCount++;
             }
         }
 
-        if (numExams === 0) {
-            console.log(chalk.red("Aucun profil valide n'a été généré."));
-            return;
+        // Si aucun fichier n'a été analysé correctement
+        if (fileCount === 0) {
+            console.log(chalk.red("Aucun fichier valide n'a pu être analysé."));
+            return null;
         }
+
+        // Calculer les moyennes
+        const averageProfile = calculateAverages(aggregateProfile, fileCount);
+
+        console.log(chalk.green("Profil moyen des examens :"));
+        console.log(averageProfile);
+
+        return averageProfile;
+    } catch (error) {
+        console.error(chalk.red("Erreur lors de l'analyse pour le profil moyen :"), error);
+        return null;
+    }
+}
+// Lister les fichiers avec une extension donnée dans un répertoire, et filtrer par préfixe
+async function listFiles(directoryPath, extension, prefix) {
+    try {
+        const files = await fs.readdir(directoryPath);
+        return files
+            .filter((file) => file.endsWith(extension) && file.startsWith(prefix)) // Filtrer par extension et préfixe
+            .map((file) => path.join(directoryPath, file));
+    } catch (error) {
+        console.error(chalk.red("Erreur lors de la lecture des fichiers :"), error);
+        return [];
+    }
+}
+// Initialiser les accumulateurs pour les profils
+function initProfileAccumulators() {
+    return {
+        cloze: 0,
+        matching: 0,
+        multiple_choice: 0,
+        numerical: 0,
+        short_answer: 0,
+        true_false: 0,
+        multiple_choice_feedback: 0,
+        open: 0,
+    };
+}
+// Ajouter les données d'un profil à l'accumulateur
+function accumulateProfile(accumulator, profile) {
+    for (const [type, { count }] of Object.entries(profile)) {
+        if (accumulator[type] !== undefined) {
+            accumulator[type] += count;
+        }
+    }
+}
+// Calculer les moyennes pour chaque type de question
+function calculateAverages(accumulator, fileCount) {
+    const averages = {};
+    for (const [type, count] of Object.entries(accumulator)) {
+        averages[type] = count / fileCount;
+    }
+    return averages;
+}
+async function compareExamToAverage(directoryPath) {
+    console.log(chalk.blue("Comparaison d'un examen avec le profil moyen..."));
+
+    try {
+        // Réinitialiser les variables globales
+        averageProfileData = {};
+        examProfile = {};
 
         // Calcul du profil moyen
-        const averageProfile = calculateAverageProfile(profileData, numExams);
-        console.log(chalk.green("Profil moyen généré avec succès :"));
-        console.log(chalk.bgCyan(JSON.stringify(averageProfile, null, 2)));
+        const average = await averageProfile(directoryPath);
+        if (!average) {
+            console.log(chalk.red("Impossible de calculer le profil moyen. Annulation."));
+            return null; // Retourne null en cas d'échec
+        }
 
-        // Partie 2 : Sélection d'un fichier d'examen à comparer
-        console.log(chalk.blue("Sélectionnez un fichier d'examen à comparer au profil moyen."));
-        const selectedExam = await selectFile(directoryPath, "gift");
-        if (!selectedExam || !selectedExam.startsWith("exam")) {
-            console.log(chalk.red("Fichier non valide ou non sélectionné. Opération annulée."));
+        console.log(chalk.green("Profil moyen calculé avec succès."));
+        console.log(average);
+
+        // Stocke le profil moyen dans la variable globale
+        averageProfileData = average;
+
+        // Sélection d'un fichier pour la comparaison
+        const filePath = await selectFile(directoryPath, 'gift');
+        if (!filePath) {
+            console.log(chalk.red("Aucun fichier sélectionné. Annulation."));
+            return null;
+        }
+
+        console.log(chalk.blue(`Fichier sélectionné pour la comparaison : ${filePath}`));
+
+        // Analyse de l'examen
+        const parsedOutputPath = path.resolve("./data/parsedExamComparison.json");
+        const rawExamProfile = await analyzeFile(filePath, parsedOutputPath);
+
+        if (!rawExamProfile) {
+            console.log(chalk.red("Impossible d'analyser le fichier sélectionné. Annulation."));
+            return null;
+        }
+
+        // Conversion du profil d'examen
+        examProfile = Array.isArray(rawExamProfile)
+            ? rawExamProfile.reduce((acc, item) => {
+                acc[item.type] = item.count;
+                return acc;
+            }, {})
+            : Object.fromEntries(
+                Object.entries(rawExamProfile).map(([key, value]) => [key, value.count])
+            );
+
+        console.log(chalk.blue("Profil converti pour la comparaison :"));
+        console.log(examProfile);
+
+        // Comparaison des profils
+        const comparison = compareProfiles(averageProfileData, examProfile);
+        console.log(chalk.blue("Résultats de la comparaison :"));
+        console.log(comparison);
+
+        // Retourne les résultats de la comparaison
+        return comparison;
+
+    } catch (error) {
+        console.error(chalk.red("Erreur lors de la comparaison :"), error);
+        return null;
+    }
+}
+function compareProfiles(averageProfileData, examProfile) {
+    const results = {};
+    const tolerance = 2; // Marge de tolérance de ±2
+
+    for (const [type, averageCount] of Object.entries(averageProfileData)) {
+        const examCount = examProfile[type] || 0;
+        const lowerBound = averageCount - tolerance;
+        const upperBound = averageCount + tolerance;
+
+        if (examCount >= lowerBound && examCount <= upperBound) {
+            // Dans la moyenne
+            results[type] = chalk.green(`Dans la moyenne avec ${examCount}, avec : ${averageCount.toFixed(2)} pour la moyenne`);
+        } else if (examCount > upperBound) {
+            // Trop de questions
+            results[type] = chalk.red(`Plus de questions que la moyenne avec ${examCount}, contre : ${averageCount.toFixed(2)} pour la moyenne`);
+        } else {
+            // Pas assez de questions
+            results[type] = chalk.yellow(`Moins de questions que la moyenne avec ${examCount}, contre : ${averageCount.toFixed(2)} pour la moyenne`);
+        }
+    }
+
+    return results;
+}
+async function comparaisonProfileMoyen(directoryPath) {
+    console.log(chalk.cyan("Démarrage de la comparaison avec le profil moyen des examens..."));
+
+    try {
+        // Calculer le profil moyen des examens
+        const average = await averageProfile(directoryPath);
+        if (!average) {
+            console.log(chalk.red("Impossible d'extraire le profil moyen. Annulation."));
             return;
         }
 
-        console.log(chalk.green(`Fichier d'examen sélectionné : ${selectedExam}`));
-        initProfile(); // Réinitialisation avant l'analyse du fichier sélectionné
+        console.log(chalk.green("Profil moyen bien extrait pour graph :"));
+        console.log(average);
 
-        const parsedSelectedExamPath = path.resolve(`./data/parsedSelectedExam.json`);
-        const parsedSelectedExam = await parser.parse(selectedExam, parsedSelectedExamPath);
-        if (!parsedSelectedExam) {
-            console.log(chalk.red("Impossible de parser le fichier d'examen sélectionné."));
+        // Stocke le profil moyen dans la variable globale profile
+        averageProfileData = average;
+
+        // Utiliser la fonction compareExamToAverage pour obtenir les résultats de la comparaison
+        const comparisonResults = await compareExamToAverage(directoryPath);
+
+        if (!comparisonResults) {
+            console.log(chalk.red("Erreur lors de l'extraction pour graph de la comparaison. Annulation."));
             return;
         }
 
-        // Écrire les données parsées dans parsedSelectedExam.json
-        fs.writeFileSync(parsedSelectedExamPath, JSON.stringify(parsedSelectedExam, null, 2), "utf8");
-        console.log(`Données parsées écrites avec succès dans ${parsedSelectedExamPath}.`);
+        console.log(chalk.green("Résultats de la comparaison obtenus avec succès pour graph"));
 
-        await analyze(parsedSelectedExam); // Analyse des données du fichier sélectionné
-        const selectedExamProfile = { ...profile };
+        // Préparer les données pour le graphique à partir des résultats de la comparaison
+        const comparisonData = prepareComparisonData(comparisonResults, averageProfileData);
 
-        console.log(chalk.green("Profil de l'examen sélectionné généré avec succès :"));
-        console.log(chalk.bgCyan(JSON.stringify(selectedExamProfile, null, 2)));
-
-        // Génération du graphique de comparaison
-        console.log(chalk.blue("Génération du graphique de comparaison..."));
-
-        const chartData = [];
-        for (const [type, averageData] of Object.entries(averageProfile)) {
-            const selectedData = selectedExamProfile[type] || { count: 0 };
-            chartData.push({ type, category: "Profil Moyen", count: averageData.count });
-            chartData.push({ type, category: "Examen Sélectionné", count: selectedData.count });
+        if (comparisonData.length === 0) {
+            console.log(chalk.red("Aucune donnée valide pour le graphique."));
+            return;
         }
 
+        // Spécification pour le graphique
         const spec = {
             $schema: "https://vega.github.io/schema/vega-lite/v5.json",
-            description: "Comparaison des profils de types de questions",
-            data: { values: chartData },
+            description: "Comparaison des types de questions entre l'examen et la moyenne",
+            data: {
+                values: comparisonData
+            },
             mark: "bar",
             encoding: {
                 x: { field: "type", type: "ordinal", title: "Type de question" },
                 y: { field: "count", type: "quantitative", title: "Nombre de questions" },
-                color: { field: "category", type: "nominal", title: "Catégorie" },
+                color: { field: "dataset", type: "nominal" },
             },
         };
 
+        // Rendre le graphique en HTML et en PDF
         await renderChartToHtml(spec);
-        console.log(chalk.green("Graphique HTML généré avec succès."));
+        await renderChartToPdf();
 
-        await renderChartToPdf(spec);
-        console.log(chalk.green("Graphique PDF généré avec succès."));
     } catch (error) {
-        console.error(chalk.red("Erreur dans compareExamProfile :"), error);
+        console.error(chalk.red("Erreur lors de la comparaison et de la création du graphique :"), error);
     }
 }
+function prepareComparisonData(comparisonResults, averageProfile) {
+    const questionTypesOrder = [
+        'cloze',
+        'matching',
+        'multiple_choice',
+        'numerical',
+        'short_answer',
+        'true_false',
+        'multiple_choice_feedback',
+        'open'
+    ];
 
+    const data = [];
+
+    for (const type of questionTypesOrder) {
+        if (comparisonResults[type] !== undefined && averageProfile[type] !== undefined) {
+            const match = comparisonResults[type].match(/(\d+\.?\d*)/);
+            const examCount = match ? parseFloat(match[0]) : 0;
+
+            data.push({ type: `${type}_moyen`, count: averageProfile[type], dataset: "Moyenne" });
+            data.push({ type: `${type}_exam`, count: examProfile[type], dataset: "Examen" });
+        }
+    }
+
+    // Log the final sorted data before returning
+    console.log("Données triées pour le graphique : ", data);
+
+    return data;
+}
 
 module.exports = {
-    makeExamGift, MenuAnalyze, simulateExam, compareExamProfile
+    makeExamGift, MenuAnalyze, simulateExam, comparaisonProfileMoyen
 };
 
 
