@@ -46,3 +46,7 @@ build/
 # Temporary files
 .tmp/
 temp/
+
+data/exam*
+data/Vcard*
+chart.html
