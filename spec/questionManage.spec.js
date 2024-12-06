@@ -1,19 +1,18 @@
+const fs = require('fs-extra');
+const path = require('path');
+const inquirer = require('inquirer');
+const chalk = require('chalk');
+const { selectQuestion } = require('../src/questionMAnager');
+const { selectNumberOfQuestions, generateGiftFile } = require('../src/examManager');
+const parser = require("../src/processGiftFiles");
+const questionsPath = path.join(__dirname, '../data/questions.json');
+
+jest.mock('inquirer');
+jest.mock('fs-extra');
+
 describe("Testing researchQuestions function", () => {
-    const fs = require("fs-extra");
-    const inquirer = require("inquirer");
-    const chalk = require("chalk");
-    const parser = {
-        parse: jest.fn(),
-    };
-
-    
-
-    const researchQuestions = require("../src/questionMAnager");
-
-    jest.mock("fs-extra");
-    jest.mock("inquirer");
-
     let mockQuestions;
+    const researchQuestions = require("../src/questionMAnager");
 
     beforeAll(() => {
         // Mock data for questions
@@ -31,7 +30,7 @@ describe("Testing researchQuestions function", () => {
         ];
 
         // Mock parser.parse to simulate JSON generation
-        parser.parse.mockResolvedValue("./data/questions.json");
+        parser.parse = jest.fn().mockResolvedValue(path.join(__dirname, "./data/questions.json"));
 
         // Mock fs.readJSON to return the predefined questions
         fs.readJSON.mockResolvedValue(mockQuestions);
@@ -41,13 +40,15 @@ describe("Testing researchQuestions function", () => {
         // Mock prompt to avoid user interaction
         inquirer.prompt.mockResolvedValue({ keyword: "résultat" });
 
-        // Execute the function
-        console.log = jest.fn(); // Mock console.log to avoid cluttering test output
+        // Mock console.log to capture its output
+        console.log = jest.fn();
+
         await researchQuestions.researchQuestions();
 
         // Assert parser and fs were called
         expect(parser.parse).toHaveBeenCalledWith("./data/Questions_GIFT", "./data/questions.json");
-        expect(fs.readJSON).toHaveBeenCalledWith("./data/questions.json");
+
+        expect(fs.readJSON).toHaveBeenCalledWith(questionsPath);
 
         // Assert console.log was called with matching questions
         expect(console.log).toHaveBeenCalledWith(expect.stringContaining("Quel est le résultat de 2 + 2 ?"));
@@ -57,8 +58,9 @@ describe("Testing researchQuestions function", () => {
         // Mock prompt for a non-matching keyword
         inquirer.prompt.mockResolvedValue({ keyword: "inexistant" });
 
-        // Execute the function
-        console.log = jest.fn(); // Mock console.log to avoid cluttering test output
+        // Mock console.log to capture its output
+        console.log = jest.fn();
+
         await researchQuestions.researchQuestions();
 
         // Assert "Question not found" is logged
@@ -69,12 +71,159 @@ describe("Testing researchQuestions function", () => {
         // Mock prompt with empty keyword
         inquirer.prompt.mockResolvedValue({ keyword: "" });
 
-        // Execute the function
-        console.log = jest.fn(); // Mock console.log to avoid cluttering test output
+        // Mock console.log to capture its output
+        console.log = jest.fn();
+
         await researchQuestions.researchQuestions();
 
         // Assert all questions are displayed when no keyword is provided
         expect(console.log).toHaveBeenCalledWith(expect.stringContaining("Quel est le résultat de 2 + 2 ?"));
         expect(console.log).toHaveBeenCalledWith(expect.stringContaining("Quelle est la couleur du ciel ?"));
+    });
+});
+
+describe('selectQuestion', () => {
+    afterEach(() => {
+        jest.clearAllMocks();
+    });
+
+    it('should return a selected question', async () => {
+        const mockQuestions = [
+            { title: 'Question 1', type: 'multiple_choice' },
+            { title: 'Question 2', type: 'true_false' },
+        ];
+
+        jest.spyOn(fs, 'readJSON').mockResolvedValue(mockQuestions);
+        inquirer.prompt.mockResolvedValue({ selectedQuestion: mockQuestions[1] });
+
+        const selectedQuestion = await selectQuestion();
+
+        expect(selectedQuestion).toEqual(mockQuestions[1]);
+        expect(inquirer.prompt).toHaveBeenCalled();
+    });
+
+    it('should return null if question bank is empty', async () => {
+        jest.spyOn(fs, 'readJSON').mockResolvedValue([]);
+
+        const selectedQuestion = await selectQuestion();
+
+        expect(selectedQuestion).toBeNull();
+        expect(inquirer.prompt).not.toHaveBeenCalled();
+    });
+
+    it('should handle question loading errors', async () => {
+        jest.spyOn(fs, 'readJSON').mockRejectedValue(new Error('Erreur de lecture'));
+        console.error = jest.fn();
+
+        const selectedQuestion = await selectQuestion();
+
+        expect(selectedQuestion).toBeNull();
+        expect(console.error).toHaveBeenCalledWith(
+            chalk.red('Erreur lors du chargement des questions :'),
+            expect.any(Error)
+        );
+    });
+});
+
+describe('selectNumberOfQuestions', () => {
+    const limit = [15, 20];
+
+    beforeEach(() => {
+        jest.clearAllMocks(); // Nettoyer les mocks avant chaque test
+    });
+
+    it('should return a valid number within the limit', async () => {
+        inquirer.prompt.mockResolvedValue({ numberOfQuestions: 18 }); // Valeur valide simulée
+
+        const numberOfQuestions = await selectNumberOfQuestions();
+
+        expect(numberOfQuestions).toBe(18); // Vérifie que la valeur retournée est correcte
+        expect(inquirer.prompt).toHaveBeenCalledWith([
+            expect.objectContaining({
+                type: 'number',
+                name: 'numberOfQuestions',
+                message: `Combien de questions souhaitez-vous ajouter à l'examen ? (entre ${limit[0]} et ${limit[1]})`,
+                validate: expect.any(Function),
+            }),
+        ]);
+    });
+
+    it('should prompt again if input is invalid', async () => {
+        inquirer.prompt
+            .mockResolvedValueOnce({ numberOfQuestions: 10 }) // Premier prompt invalide (en dehors de la limite)
+            .mockResolvedValueOnce({ numberOfQuestions: 16 }); // Deuxième prompt valide
+
+        const numberOfQuestions = await selectNumberOfQuestions();
+
+        expect(numberOfQuestions).toBe(16); // Vérifie que la valeur finale est correcte
+        expect(inquirer.prompt).toHaveBeenCalledTimes(2); // Vérifie que le prompt a été appelé deux fois
+    });
+
+    it('should handle edge values correctly', async () => {
+        inquirer.prompt
+            .mockResolvedValueOnce({ numberOfQuestions: limit[0] }); // Première valeur à la limite basse
+
+        const numberOfQuestions = await selectNumberOfQuestions();
+
+        expect(numberOfQuestions).toBe(limit[0]); // Vérifie que la limite basse est acceptée
+        expect(inquirer.prompt).toHaveBeenCalledTimes(1); // Le prompt ne doit être appelé qu'une seule fois
+    });
+
+    it('should reject input below the limit and prompt again', async () => {
+        inquirer.prompt
+            .mockResolvedValueOnce({ numberOfQuestions: 5 }) // En dehors de la limite
+            .mockResolvedValueOnce({ numberOfQuestions: limit[1] }); // Valeur valide
+
+        const numberOfQuestions = await selectNumberOfQuestions();
+
+        expect(numberOfQuestions).toBe(limit[1]); // Vérifie que la valeur finale est correcte
+        expect(inquirer.prompt).toHaveBeenCalledTimes(2); // Vérifie que le prompt a été appelé deux fois
+    });
+});
+
+describe('generateGiftFile', () => {
+    const mockExamSet = new Set([
+        {
+            title: 'Question 1',
+            type: 'multiple_choice',
+            question: 'What is 2+2?',
+            options: [
+                { text: '4', is_correct: true },
+                { text: '3', is_correct: false },
+            ],
+        },
+    ]);
+
+    it('should generate a GIFT file', async () => {
+        const ensureDirSpy = jest.spyOn(fs, 'ensureDir').mockResolvedValue();
+        const writeFileSpy = jest.spyOn(fs, 'writeFile').mockResolvedValue();
+
+        // Appeler la fonction pour générer le fichier
+        await generateGiftFile(mockExamSet);
+
+        // Construire dynamiquement le chemin du fichier attendu avec des barres obliques inverses
+        const dirPath = path.join(process.cwd(), 'data');
+        // Utiliser une expression régulière pour permettre de capturer un décalage de temps
+        const expectedFilePathRegex = new RegExp(
+            `^${dirPath.replace(/\\/g, '\\\\')}\\\\exam - \\d{4}-\\d{2}-\\d{2}T\\d{2}-\\d{2}-\\d{2}-\\d{3}Z\\.gift$`
+        );
+
+        // Vérifier que la fonction a été appelée avec le chemin complet attendu
+        expect(ensureDirSpy).toHaveBeenCalled();
+        expect(writeFileSpy).toHaveBeenCalledWith(
+            expect.stringMatching(expectedFilePathRegex),
+            expect.stringMatching(/::Question 1:: What is 2\+2\? { =4 ~3 }/),
+            'utf8'
+        );
+    });
+
+    it('should display a message if no file is generated', async () => {
+        console.log = jest.fn();
+
+        await generateGiftFile(new Set());
+
+        expect(console.log).toHaveBeenCalledWith(
+            chalk.red('Aucune question sélectionnée pour générer le fichier GIFT.')
+        );
     });
 });

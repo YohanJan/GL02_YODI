@@ -576,14 +576,6 @@ async function MenuAnalyze() {
         console.error("Erreur dans MenuAnalyze :", error);
     }
 }
-//prepare profile for vegalite
-function prepareProfile(profile) {
-    const data = [];
-    for (const [type, { count }] of Object.entries(profile)) {
-        data.push({ type, count });
-    }
-    return data;
-}
 function isQuestionInSet(set, question) {
     return Array.from(set).some(
         (q) => JSON.stringify(q.title) === JSON.stringify(question.title)
@@ -857,7 +849,7 @@ function prepareComparisonData(comparisonResults, averageProfile) {
 }
 
 module.exports = {
-    makeExamGift, MenuAnalyze, simulateExam, comparaisonProfileMoyen
+    makeExamGift, MenuAnalyze, simulateExam, selectQuestion, selectNumberOfQuestions, comparaisonProfileMoyen, generateGiftFile
 };
 
 

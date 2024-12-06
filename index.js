@@ -22,7 +22,7 @@ async function mainMenu() {
                 "Simuler un examen",
                 "Definir un profil d' examen",
                 "Parser la base de données",
-                "Spec09",
+                "Comparer un profile à la banque nationale",
                 "Quitter",
             ],
         },
@@ -51,7 +51,7 @@ async function mainMenu() {
             await parser.parse("./data/Questions_GIFT","./data/questions.json");
             break;
 
-        case "Spec09":
+        case "Comparer un profile à la banque nationale":
             await examManager.comparaisonProfileMoyen("./data");
             break;
 
