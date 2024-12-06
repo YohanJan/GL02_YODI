@@ -10,7 +10,7 @@ const readline = require("readline");
 const parser = require("./processGiftFiles");
 
 const examSet = new Set();
-const limit = [3, 5]
+const limit = [15, 20]
 
 const questionsPath = path.join(__dirname, "../data/questions.json");
 // Dossier contenant les fichiers d'examen
